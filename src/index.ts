@@ -73,15 +73,18 @@ function buildActivity() {
 }
 
 async function clearActivity() {
+  console.log("[Activity] SET_ACTIVITY null (clear)");
   await discordRpc.sendRequest(RPCCommand.SET_ACTIVITY, { pid: process.pid, activity: null });
 }
 
 setInterval(async () => {
   if (!discordRpc.isAuthenticated || !activityEnabled) return;
   try {
+    const activity = buildActivity();
+    console.log("[Activity] SET_ACTIVITY", JSON.stringify(activity));
     await discordRpc.sendRequest(RPCCommand.SET_ACTIVITY, {
       pid: process.pid,
-      activity: buildActivity(),
+      activity,
     });
   } catch (err: any) {
     console.warn("[Activity] update failed:", err.message);
@@ -147,6 +150,7 @@ app.post("/rpc/set-activity", async (req: Request, res: Response) => {
   }
 
   try {
+    // console.log("[Activity] SET_ACTIVITY via HTTP", JSON.stringify(activity));
     const data = await discordRpc.sendRequest(RPCCommand.SET_ACTIVITY, { pid, activity });
     res.json({ status: 200, data });
   } catch (err: any) {

@@ -5,10 +5,11 @@ import { RPCEvent } from "./types/events";
 import { RPCCommand } from "./types/commands";
 import { readCachedToken, exchangeCode } from "../token-cache";
 
-const RPC_SCOPES = ["rpc", "rpc.voice.read", "identify"];
+const RPC_SCOPES = ["rpc", "rpc.activities.write", "rpc.voice.read", "identify"];
 
 export class DiscordRPC {
   private socket?: net.Socket;
+  private recvBuf: Buffer = Buffer.alloc(0);
   isReady: boolean = false;
   isAuthenticated: boolean = false;
 
@@ -40,7 +41,7 @@ export class DiscordRPC {
           done = true;
           socket.removeListener("error", onError);
           this.socket = socket;
-          socket.on("data", (buf) => this.handlePacket(buf as Buffer));
+          socket.on("data", (buf) => this.handleData(buf as Buffer));
           resolve();
         };
 
@@ -150,12 +151,23 @@ export class DiscordRPC {
     this.socket?.write(packet);
   }
 
-  private handlePacket(buffer: Buffer) {
-    const op = buffer.readInt32LE(0);
-    const length = buffer.readInt32LE(4);
-    const json = buffer.subarray(8, 8 + length).toString();
-    const data = JSON.parse(json) as RPCResponse<any>;
+  private handleData(chunk: Buffer) {
+    this.recvBuf = Buffer.concat([this.recvBuf, chunk]);
+    while (this.recvBuf.length >= 8) {
+      const length = this.recvBuf.readUInt32LE(4);
+      if (this.recvBuf.length < 8 + length) break;
+      const op = this.recvBuf.readUInt32LE(0);
+      const json = this.recvBuf.subarray(8, 8 + length).toString();
+      this.recvBuf = this.recvBuf.subarray(8 + length);
+      try {
+        this.handlePacket(op, JSON.parse(json) as RPCResponse<any>);
+      } catch (err) {
+        console.error("[RPC] packet parse error:", err);
+      }
+    }
+  }
 
+  private handlePacket(op: number, data: RPCResponse<any>) {
     if (op === 1 && data.evt === RPCEvent.READY) {
       this.onReady(data.data?.user).catch(console.error);
       return;
