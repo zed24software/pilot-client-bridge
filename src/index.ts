@@ -4,6 +4,7 @@ import { DiscordRPC } from "./rpc";
 import { RPCCommand } from "./rpc/types/commands";
 import { client_id, auth_server, activity_enabled } from "./rpc-config.json";
 import channels from "./channels.json";
+import { initTray, updateDiscordStatus, updateChannel, updateActivity } from "./systray";
 
 const app = express();
 app.use(cors({
@@ -16,19 +17,26 @@ const SERVER_VERSION = "1.0.0";
 
 const discordRpc = new DiscordRPC(client_id, auth_server);
 discordRpc.onAuthenticated = () => {
+  updateDiscordStatus(true);
   if (!activityEnabled) clearActivity().catch(console.warn);
   discordRpc.sendRequest(RPCCommand.GET_CHANNELS, { guild_id: "919656909563371600" })
     .then((res) => { cachedGuildChannels = res.data.channels; })
     .catch((err: Error) => console.warn("[RPC] GET_CHANNELS failed:", err.message));
   discordRpc.sendRequest(RPCCommand.GET_SELECTED_VOICE_CHANNEL)
-    .then((res) => { cachedSelectedChannel = res.data; })
+    .then((res) => {
+      cachedSelectedChannel = res.data;
+      updateChannel(res.data?.name ?? null);
+    })
     .catch((err: Error) => console.warn("[RPC] GET_SELECTED_VOICE_CHANNEL failed:", err.message));
 };
 
 discordRpc.connect().then(() => {
   console.log("[Bridge] Discord IPC connected — sending handshake");
   discordRpc.sendHandshake();
-}).catch((err) => console.error("[Bridge] IPC connect failed:", err.message));
+}).catch((err) => {
+  console.error("[Bridge] IPC connect failed:", err.message);
+  updateDiscordStatus(false);
+});
 
 function rpcReady(res: Response): boolean {
   if (!discordRpc.isAuthenticated) {
@@ -117,6 +125,7 @@ app.post("/rpc/select-voice-channel", async (req: Request, res: Response) => {
       ...(navigate !== undefined && { navigate }),
       ...(timeout !== undefined && { timeout }),
     });
+    updateChannel(entry.position);
     res.json({ status: 200, data });
   } catch (err: any) {
     res.status(500).json({ status: 500, error: err.message });
@@ -162,6 +171,7 @@ app.get("/rpc/selected-voice-channel", (_req: Request, res: Response) => {
 app.post("/activity/toggle", (req: Request, res: Response) => {
   activityEnabled = typeof req.body?.enabled === "boolean" ? req.body.enabled : !activityEnabled;
   if (!activityEnabled) clearActivity().catch(console.warn);
+  updateActivity(activityEnabled);
   res.json({ status: 200, activityEnabled });
 });
 
@@ -177,3 +187,8 @@ app.post("/state", (req: Request, res: Response) => {
 app.listen(BRIDGE_PORT, "127.0.0.1", () => {
   console.log(`Pilot Client Bridge listening on 127.0.0.1:${BRIDGE_PORT}`);
 });
+
+initTray(activityEnabled, (next: boolean) => {
+  activityEnabled = next;
+  if (!activityEnabled) clearActivity().catch(console.warn);
+}, () => process.exit(0));

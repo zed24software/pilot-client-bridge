@@ -2,3 +2,4 @@
 /dist
 pnpm-lock.yaml
 token.json
+src/assets/icon.psd

@@ -47,6 +47,11 @@ export class DiscordRPC {
         const onError = () => {
           socket.removeAllListeners();
           socket.destroy();
+          if(done) {
+            /* already had a working connection at some point */
+            index = 0;
+            done = false;
+          }
           tryNext();
         };
 
