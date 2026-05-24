@@ -5,6 +5,10 @@ import { RPCCommand } from "./rpc/types/commands";
 import { client_id, auth_server, activity_enabled } from "./rpc-config.json";
 import channels from "./channels.json";
 import { initTray, updateDiscordStatus, updateChannel, updateActivity } from "./systray";
+import { checkForUpdates } from "./updatechecker";
+
+/* gets version from package.json and checks github releases */
+checkForUpdates();
 
 const app = express();
 app.use(cors({

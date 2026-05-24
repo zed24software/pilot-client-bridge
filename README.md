@@ -25,7 +25,7 @@ A bridge application that connects the 24Client web client to Discord RPC, enabl
 
 ### Windows (Pre-compiled Installer)
 
-1. Download the latest installer from: https://zedruc.net/downloads/24Client%20Bridge_Setup_latest.exe
+1. Download the latest installer from the releases tab
 2. Run the installer and follow the installation wizard
 3. The application will be installed to your Program Files directory
 4. A shortcut will be created in your Start Menu

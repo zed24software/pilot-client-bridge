@@ -1,0 +1,93 @@
+# Changelog
+
+All notable changes to the 24Client Bridge project will be documented in this file.
+
+## [1.0.0-beta.1] - 2026-05-24
+
+### Added - Initial Beta Release
+
+#### Core Features
+- **Discord RPC Integration**: Full integration with Discord Rich Presence API for seamless status updates
+- **Dynamic Flight Status Display**: Real-time Discord activity updates showing:
+  - Current altitude
+  - Heading information
+  - Aircraft callsign and type
+  - Automatic status clearing when not in flight
+- **Voice Channel Switching**: Programmatic Discord voice channel switching based on radio frequencies
+- **REST API**: Full-featured REST API for interacting with Discord RPC functionality
+- **System Tray Integration**: Background service with system tray icon for quick status monitoring and control
+- **Multi-platform Support**: Windows with pre-compiled installer and Linux with self-compile option
+
+#### API Endpoints
+- `GET /` - Health check endpoint
+- `POST /rpc/select-voice-channel` - Switch voice channels by frequency
+- `GET /rpc/voice-connection-status` - Get current voice connection status
+- `POST /rpc/set-activity` - Manually set Discord activity status
+- `GET /rpc/get-channels` - Retrieve available voice channels
+- `POST /rpc/set-user-voice-settings` - Configure voice settings
+
+#### Configuration
+- `rpc-config.json` - Discord RPC client configuration
+- `channels.json` - Radio frequency to Discord channel mappings for Italian airspace (20+ airports supported)
+
+#### Development Features
+- TypeScript support with strict type checking
+- Development mode with hot-reload (`pnpm run dev`)
+- Production build system using Bun
+- Windows installer generation with NSIS
+- Comprehensive error handling and logging
+
+#### Platform Support
+- **Windows**: Pre-compiled executable installer with automatic installation to Program Files
+- **Linux**: Full source compilation support with clear build instructions
+
+### Installation
+
+#### Windows
+- Pre-compiled installer available at: https://zedruc.net/downloads/24Client%20Bridge_Setup_latest.exe
+- One-click installation with automatic shortcuts and system tray integration
+
+#### Linux
+- Self-compile from source using `pnpm run build`
+- Requires Node.js 18+ or Bun runtime
+
+### Known Limitations (Beta)
+
+- Activity updates occur every 10 seconds (not real-time)
+- System tray integration Windows-only in this release
+- OAuth token caching may require manual refresh in certain scenarios
+
+### Technical Details
+
+- **Runtime**: Bun/Node.js
+- **Framework**: Express.js for REST API
+- **IPC Protocol**: Custom Discord RPC handshake implementation
+- **API Port**: 127.0.0.1:57330
+- **CORS Origins**: https://zedruc.net, http://localhost:5174
+
+### Testing Notes
+
+This is a beta release intended for testing and feedback. Please report any issues or unexpected behavior through the project's issue tracker.
+
+### System Requirements
+
+Electricity
+
+### Breaking Changes
+
+None - initial release.
+
+### Deprecations
+
+None - initial release.
+
+### Security Notes
+
+- API server binds to 127.0.0.1 only (no external network access)
+- Discord IPC authentication required for all operations
+- Discord token cached locally for session persistence
+- CORS restricted to specific origins
+
+---
+
+For more information, see [README.md](README.md).
