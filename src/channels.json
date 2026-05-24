@@ -110,6 +110,11 @@
     "channelId": "1409261183877255199"
   },
   {
+    "position": "ITKO_TWR",
+    "frequency": "118.800",
+    "channelId": "1409261183877255199"
+  },
+  {
     "position": "IDCS_TWR",
     "frequency": "118.250",
     "channelId": "1409261335425843311"

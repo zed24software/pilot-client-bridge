@@ -17,6 +17,12 @@ const SERVER_VERSION = "1.0.0";
 const discordRpc = new DiscordRPC(client_id, auth_server);
 discordRpc.onAuthenticated = () => {
   if (!activityEnabled) clearActivity().catch(console.warn);
+  discordRpc.sendRequest(RPCCommand.GET_CHANNELS, { guild_id: "919656909563371600" })
+    .then((res) => { cachedGuildChannels = res.data.channels; })
+    .catch((err: Error) => console.warn("[RPC] GET_CHANNELS failed:", err.message));
+  discordRpc.sendRequest(RPCCommand.GET_SELECTED_VOICE_CHANNEL)
+    .then((res) => { cachedSelectedChannel = res.data; })
+    .catch((err: Error) => console.warn("[RPC] GET_SELECTED_VOICE_CHANNEL failed:", err.message));
 };
 
 discordRpc.connect().then(() => {
@@ -41,6 +47,8 @@ interface FlightState {
 
 let flightState: FlightState = {};
 let activityEnabled = activity_enabled;
+let cachedGuildChannels: any[] = [];
+let cachedSelectedChannel: any = null;
 
 function buildActivity() {
   const parts: string[] = [];
@@ -140,6 +148,15 @@ app.post("/rpc/set-activity", async (req: Request, res: Response) => {
 app.get("/rpc/current-user", (_req: Request, res: Response) => {
   if (!rpcReady(res)) return;
   res.json({ status: 200, data: discordRpc.currentUser });
+});
+
+app.get("/channels", (_req: Request, res: Response) => {
+  res.json({ status: 200, data: cachedGuildChannels });
+});
+
+app.get("/rpc/selected-voice-channel", (_req: Request, res: Response) => {
+  if (!rpcReady(res)) return;
+  res.json({ status: 200, data: cachedSelectedChannel });
 });
 
 app.post("/activity/toggle", (req: Request, res: Response) => {
