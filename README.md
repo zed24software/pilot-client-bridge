@@ -2,6 +2,10 @@
 
 A bridge application that connects the 24Client web client to Discord RPC, enabling dynamic flight status display in Discord and voice channel switching through RPC commands.
 
+## Contributing
+
+We are not (yet) accepting any pull requests, any requests opened while this message is still here will simply be closed
+
 ## Features
 
 - **Dynamic Flight Status Display**: Automatically updates your Discord activity with real-time flight information including altitude, heading, callsign, and aircraft type
