@@ -30,13 +30,14 @@ interface UpdateCheckResult {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
- * Strips a leading "v" from a version string and returns a comparable semver tuple.
- * e.g. "v1.2.3" → [1, 2, 3]
+ * Extracts the first semver-like number sequence from a version string,
+ * ignoring any prefix (e.g. "beta-", "v", "release-", etc.).
+ * e.g. "beta-1.0.0" → [1, 0, 0], "v2.3.1" → [2, 3, 1]
  */
 function parseVersion(version: string): [number, number, number] {
-  const cleaned = version.replace(/^v/i, "").trim();
-  const parts = cleaned.split(".").map((p) => parseInt(p, 10) || 0);
-  return [parts[0] ?? 0, parts[1] ?? 0, parts[2] ?? 0];
+  const match = version.match(/(\d+)\.(\d+)\.(\d+)/);
+  if (!match) return [0, 0, 0];
+  return [parseInt(match[1], 10), parseInt(match[2], 10), parseInt(match[3], 10)];
 }
 
 /**
@@ -58,7 +59,7 @@ function getCurrentVersion(): string {
   try {
     // __dirname works in CommonJS; adjust if using ESM
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const pkg = require("../package.json") as { version?: string };
+    const pkg = require("../../package.json") as { version?: string };
     return pkg.version ?? "0.0.0";
   } catch {
     return "0.0.0";
