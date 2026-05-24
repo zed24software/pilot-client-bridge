@@ -2,11 +2,24 @@ import net from "node:net";
 import Opcodes, { Opcode } from "./types/opcodes";
 import { RPCRequest, RPCResponse } from "./types";
 import { RPCEvent } from "./types/events";
+import { RPCCommand } from "./types/commands";
+import { readCachedToken, exchangeCode } from "../token-cache";
+
+const RPC_SCOPES = ["rpc", "rpc.voice.read", "identify"];
 
 export class DiscordRPC {
   private socket?: net.Socket;
-  private pipe?: string;
   isReady: boolean = false;
+  isAuthenticated: boolean = false;
+
+  currentUser: any = null;
+  voiceConnectionStatus: any = null;
+
+  onAuthenticated?: () => void;
+
+  private pending = new Map<string, { resolve: (data: any) => void; reject: (err: Error) => void }>();
+
+  constructor(private readonly clientId: string, private readonly authServer: string) {}
 
   async connect(): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -25,16 +38,9 @@ export class DiscordRPC {
         const onConnect = () => {
           if (done) return;
           done = true;
-
           socket.removeListener("error", onError);
-
           this.socket = socket;
-          this.pipe = pipe;
-
-          // IMPORTANT: attach AFTER socket is valid
           socket.on("data", (buf) => this.handlePacket(buf as Buffer));
-
-          this.isReady = true;
           resolve();
         };
 
@@ -52,62 +58,123 @@ export class DiscordRPC {
     });
   }
 
-  executeHandshake(client_id: string) {
-    const json = JSON.stringify({
-      v: 1,
-      client_id,
-    });
-
+  sendHandshake() {
+    const json = JSON.stringify({ v: 1, client_id: this.clientId });
     const body = Buffer.from(json, "utf-8");
-
     const message = Buffer.alloc(8 + body.length);
-
-    message.writeUInt32LE(Opcodes.HANDSHAKE, 0); // 4 bytes written
-    message.writeUInt32LE(body.length, 4); // 8 bytes written
-    body.copy(message, 8); // start copying json from 8th byte forward
-
-    console.log("sending handshake:", message);
-
+    message.writeUInt32LE(Opcodes.HANDSHAKE, 0);
+    message.writeUInt32LE(body.length, 4);
+    body.copy(message, 8);
+    console.log("[RPC] sending handshake");
     this.socket?.write(message);
   }
 
-  sendRequest(cmd: string, args?: any) {
-    const payload: RPCRequest = {
-      cmd: cmd as any,
-      args,
-      nonce: crypto.randomUUID(),
-    };
+  sendRequest(cmd: RPCCommand, args?: any): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const nonce = crypto.randomUUID();
+      const payload: RPCRequest = { cmd, args, nonce };
+      this.pending.set(nonce, { resolve, reject });
+      this.send(Opcodes.FRAME, payload);
+    });
+  }
 
-    this.send(Opcodes.FRAME, payload);
+  subscribe(evt: RPCEvent, args?: any): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const nonce = crypto.randomUUID();
+      const payload: RPCRequest = { cmd: RPCCommand.SUBSCRIBE, evt, args, nonce };
+      this.pending.set(nonce, { resolve, reject });
+      this.send(Opcodes.FRAME, payload);
+    });
+  }
+
+  private async onReady(userData: any) {
+    this.isReady = true;
+    if (userData) this.currentUser = userData;
+    console.log("[RPC] READY — starting auth");
+
+    try {
+      await this.authenticate();
+      console.log("[RPC] authenticated");
+      await this.subscribeToEvents();
+    } catch (err: any) {
+      console.error("[RPC] auth failed:", err.message);
+    }
+  }
+
+  private async authenticate() {
+    const cached = readCachedToken();
+    if (cached) {
+      console.log("[RPC] using cached token");
+      const authRes = await this.sendRequest(RPCCommand.AUTHENTICATE, { access_token: cached });
+      if (authRes.data?.user) this.currentUser = authRes.data.user;
+      this.isAuthenticated = true;
+      this.onAuthenticated?.();
+      return;
+    }
+
+    console.log("[RPC] no cached token — running AUTHORIZE");
+    const authorizeRes = await this.sendRequest(RPCCommand.AUTHORIZE, {
+      client_id: this.clientId,
+      scopes: RPC_SCOPES,
+    });
+    const code: string = authorizeRes.data.code;
+
+    const access_token = await exchangeCode(this.authServer, code);
+
+    const authRes = await this.sendRequest(RPCCommand.AUTHENTICATE, { access_token });
+    if (authRes.data?.user) this.currentUser = authRes.data.user;
+    this.isAuthenticated = true;
+    this.onAuthenticated?.();
+  }
+
+  private async subscribeToEvents() {
+    await this.subscribe(RPCEvent.VOICE_CONNECTION_STATUS).catch((err: Error) =>
+      console.warn(`[RPC] VOICE_CONNECTION_STATUS subscribe failed: ${err.message}`)
+    );
+    await this.subscribe(RPCEvent.CURRENT_USER_UPDATE).catch((err: Error) =>
+      console.warn(`[RPC] CURRENT_USER_UPDATE subscribe failed: ${err.message}`)
+    );
   }
 
   private send(op: Opcode, data: any) {
-    console.log("sending", op, data);
-
     const json = Buffer.from(JSON.stringify(data));
-
     const packet = Buffer.alloc(8 + json.length);
     packet.writeInt32LE(op, 0);
     packet.writeInt32LE(json.length, 4);
     json.copy(packet, 8);
-
     this.socket?.write(packet);
   }
 
   private handlePacket(buffer: Buffer) {
     const op = buffer.readInt32LE(0);
     const length = buffer.readInt32LE(4);
-
     const json = buffer.subarray(8, 8 + length).toString();
-    const data = JSON.parse(json) as RPCResponse<{v: number, config: any, evt: string, nonce: string}>;
+    const data = JSON.parse(json) as RPCResponse<any>;
 
-    console.log("OP:", op, data);
+    if (op === 1 && data.evt === RPCEvent.READY) {
+      this.onReady(data.data?.user).catch(console.error);
+      return;
+    }
 
-    /* set ready when handshake respons with evt: READY */
-    if(op === 1 && data.evt === RPCEvent.READY) {
-      this.isReady = true;
-    } else {
-      throw new Error("Handshake failed");
+    if (data.cmd === RPCCommand.DISPATCH) {
+      if (data.evt === RPCEvent.VOICE_CONNECTION_STATUS) {
+        this.voiceConnectionStatus = data.data;
+      } else if (data.evt === RPCEvent.CURRENT_USER_UPDATE) {
+        this.currentUser = data.data;
+      }
+      return;
+    }
+
+    if (data.nonce) {
+      const pending = this.pending.get(data.nonce);
+      if (pending) {
+        this.pending.delete(data.nonce);
+        if (data.evt === RPCEvent.ERROR) {
+          pending.reject(new Error(JSON.stringify(data.data)));
+        } else {
+          pending.resolve(data);
+        }
+      }
     }
   }
 }

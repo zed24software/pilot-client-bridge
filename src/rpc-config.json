@@ -1,3 +1,5 @@
 {
-  "client_id": "1275560670682939505"
+  "client_id": "1507887570154164385",
+  "auth_server": "http://localhost",
+  "activity_enabled": false
 }

@@ -17,6 +17,7 @@ export interface Handshake {
 
 export interface RPCRequest<TArgs = any> {
   cmd: RPCCommand;
+  evt?: RPCEvent;
   nonce?: string;
   args?: TArgs;
 }
