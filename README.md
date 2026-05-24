@@ -198,4 +198,4 @@ This project is licensed under the GNU General Public License v3.0.
 
 ## Credits
 
-Created by Zedruc and Awdev for 24Client flight simulation integration.
+Created by Zedruc and awdev for 24Client flight simulation integration.
