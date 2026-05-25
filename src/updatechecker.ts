@@ -1,6 +1,8 @@
 import axios from "axios";
 import { execSync } from "child_process";
 import * as os from "os";
+import notifier from "node-notifier";
+import open from "open";
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 
@@ -59,7 +61,7 @@ function getCurrentVersion(): string {
   try {
     // __dirname works in CommonJS; adjust if using ESM
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const pkg = require("../../package.json") as { version?: string };
+    const pkg = require("../package.json") as { version?: string };
     return pkg.version ?? "0.0.0";
   } catch {
     return "0.0.0";
@@ -86,35 +88,44 @@ async function fetchLatestRelease(): Promise<GitHubRelease> {
  * Supports macOS (osascript), Linux (notify-send), and Windows (PowerShell).
  */
 function sendDesktopNotification(title: string, message: string): void {
-  const platform = os.platform();
+  notifier.notify({
+    title: "Update Available",
+    message: "24Client Bridge has a newer version available in the repo!",
+    wait: true,
+    icon: "./assets/icon.png"
+  });
 
-  try {
-    if (platform === "darwin") {
-      const escaped = message.replace(/"/g, '\\"');
-      execSync(
-        `osascript -e 'display notification "${escaped}" with title "${title}"'`
-      );
-    } else if (platform === "linux") {
-      execSync(`notify-send "${title}" "${message}"`);
-    } else if (platform === "win32") {
-      // Uses a self-cleaning PowerShell toast — no extra packages needed
-      const script = `
-        [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
-        [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom, ContentType = WindowsRuntime] | Out-Null
-        $xml = [Windows.Data.Xml.Dom.XmlDocument]::new()
-        $xml.LoadXml('<toast><visual><binding template="ToastGeneric"><text>${title}</text><text>${message}</text></binding></visual></toast>')
-        $toast = [Windows.UI.Notifications.ToastNotification]::new($xml)
-        [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('${GITHUB_REPO}').Show($toast)
-      `;
-      execSync(`powershell -Command "${script.replace(/\n\s*/g, " ")}"`);
-    } else {
-      console.warn(
-        `[UpdateChecker] Desktop notifications not supported on platform: ${platform}`
-      );
-    }
-  } catch (err) {
-    console.warn("[UpdateChecker] Could not send desktop notification:", err);
-  }
+  notifier.on("click", (notifierObject, options, event) => {
+    open("https://github.com/zed24software/pilot-client-bridge");
+  });
+
+  // try {
+  //   if (platform === "darwin") {
+  //     const escaped = message.replace(/"/g, '\\"');
+  //     execSync(
+  //       `osascript -e 'display notification "${escaped}" with title "${title}"'`
+  //     );
+  //   } else if (platform === "linux") {
+  //     execSync(`notify-send "${title}" "${message}"`);
+  //   } else if (platform === "win32") {
+  //     // Uses a self-cleaning PowerShell toast — no extra packages needed
+  //     const script = `
+  //       [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
+  //       [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom, ContentType = WindowsRuntime] | Out-Null
+  //       $xml = [Windows.Data.Xml.Dom.XmlDocument]::new()
+  //       $xml.LoadXml('<toast><visual><binding template="ToastGeneric"><text>${title}</text><text>${message}</text></binding></visual></toast>')
+  //       $toast = [Windows.UI.Notifications.ToastNotification]::new($xml)
+  //       [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('${GITHUB_REPO}').Show($toast)
+  //     `;
+  //     execSync(`powershell -Command "${script.replace(/\n\s*/g, " ")}"`);
+  //   } else {
+  //     console.warn(
+  //       `[UpdateChecker] Desktop notifications not supported on platform: ${platform}`
+  //     );
+  //   }
+  // } catch (err) {
+  //   console.warn("[UpdateChecker] Could not send desktop notification:", err);
+  // }
 }
 
 // ─── Main export ──────────────────────────────────────────────────────────────

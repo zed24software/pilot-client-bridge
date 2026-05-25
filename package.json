@@ -18,6 +18,8 @@
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "node-ipc": "^12.0.0",
+    "node-notifier": "^10.0.1",
+    "open": "^11.0.0",
     "systray2": "^2.1.4"
   },
   "devDependencies": {
@@ -25,6 +27,7 @@
     "@types/express": "^5.0.6",
     "@types/node": "^25.9.1",
     "@types/node-ipc": "^9.2.3",
+    "@types/node-notifier": "^8.0.5",
     "nodemon": "^3.1.14",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3"
