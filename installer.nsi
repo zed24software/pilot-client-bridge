@@ -98,7 +98,8 @@ Section "${APP_NAME} Core" SecCore
     SetOutPath "$INSTDIR"
 
     File "${APP_EXE_SRC}"          ; Copies dist\24client-bridge.exe → $INSTDIR\24client-bridge.exe
-
+    File "node_modules\.pnpm\systray2@2.1.4\node_modules\systray2\traybin\tray_windows_release.exe"
+    
     WriteRegStr HKLM "${REG_KEY}" "InstallPath" "$INSTDIR"
     WriteRegStr HKLM "${REG_KEY}" "Version"     "${APP_VERSION}"
 
@@ -184,6 +185,7 @@ Section "Uninstall"
     DeleteRegKey HKLM "${REG_KEY}"
 
     Delete "$INSTDIR\${APP_EXE}"
+    Delete "$INSTDIR\tray_windows_release.exe"
     Delete "$INSTDIR\Uninstall.exe"
     RMDir  "$INSTDIR"
 

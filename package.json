@@ -5,7 +5,8 @@
   "main": "src/index.ts",
   "scripts": {
     "dev": "nodemon --watch ./src ./src/index.ts",
-    "build": "bun build ./src/index.ts --compile --outfile ./dist/24client-bridge --windows-icon=src/assets/icon.ico --windows-title=\"24client-bridge\" --windows-description=\"Bridge application connecting 24client to Discord\" --windows-copyright=\"Zedruc\"",
+    "copy-systray-bin": "copy node_modules\\.pnpm\\systray2@2.1.4\\node_modules\\systray2\\traybin\\tray_windows_release.exe dist\\",
+    "build": "bun build ./src/index.ts --compile --outfile ./dist/24client-bridge --windows-icon=src/assets/icon.ico --windows-title=\"24client-bridge\" --windows-description=\"Bridge application connecting 24client to Discord\" --windows-copyright=\"Zedruc\" && pnpm run copy-systray-bin",
     "build-installer": "makensis installer.nsi",
     "serve": "pnpm run build && pnpm build-installer"
   },

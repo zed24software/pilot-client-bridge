@@ -1,6 +1,6 @@
 import SysTrayImport, { MenuItem } from "systray2";
 import os from "os";
-import { join } from "path";
+import { dirname, join } from "path";
 
 const SysTray = ((SysTrayImport as any).default ?? SysTrayImport) as typeof SysTrayImport;
 type SysTrayInstance = InstanceType<typeof SysTrayImport>;
@@ -48,6 +48,8 @@ function activityItem(enabled: boolean) {
 
 let _tray: SysTrayInstance | null = null;
 
+const systray2BinaryDir = dirname(process.execPath); /* bundled next to 24client */
+
 export function initTray(
   initialActivity: boolean,
   onToggleActivity: (next: boolean) => void,
@@ -70,7 +72,7 @@ export function initTray(
       ],
     },
     debug: false,
-    copyDir: true,
+    copyDir: systray2BinaryDir,
   });
 
   _tray.onClick((action) => {
