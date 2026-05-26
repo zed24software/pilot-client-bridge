@@ -1,5 +1,5 @@
 {
   "client_id": "1507887570154164385",
-  "auth_server": "http://localhost",
+  "auth_server": "http://api.zedruc.net",
   "activity_enabled": true
 }

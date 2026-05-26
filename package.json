@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "scripts": {
     "dev": "nodemon --watch ./src ./src/index.ts",
-    "build": "bun build ./src/index.ts --compile --outfile ./dist/24client-bridge --windows-icon=src/assets/icon.ico --windows-title=\"24client-bridge\" --windows-description=\"Bridge application connecting 24client to Discord\" --windows-copyright=\"Zedruc\"",
+    "build": "node scripts/embed-tray-bin.mjs && bun build ./src/index.ts --compile --outfile ./dist/24client-bridge --windows-icon=src/assets/icon.ico --windows-title=\"24client-bridge\" --windows-description=\"Bridge application connecting 24client to Discord\" --windows-copyright=\"Zedruc\"",
     "build-installer": "makensis installer.nsi",
     "serve": "pnpm run build && pnpm build-installer"
   },

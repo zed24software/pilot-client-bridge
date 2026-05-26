@@ -1,6 +1,20 @@
-import SysTray, { MenuItem } from "systray2";
+import type SysTrayType from "systray2";
+import type { MenuItem } from "systray2";
 import os from "os";
+import fs from "fs";
 import { join } from "path";
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const SysTray: typeof SysTrayType = require("systray2").default;
+import { trayBinBase64 } from "./traybin-embedded";
+
+function ensureTrayBin(): void {
+  if (process.platform !== "win32") return;
+  const cacheDir = join(os.homedir(), ".cache", "node-systray", "2.1.4");
+  const cachePath = join(cacheDir, "tray_windows_release.exe");
+  if (fs.existsSync(cachePath)) return;
+  fs.mkdirSync(cacheDir, { recursive: true });
+  fs.writeFileSync(cachePath, Buffer.from(trayBinBase64, "base64"));
+}
 
 type ClickableMenuItem = MenuItem & { click: () => void };
 
@@ -43,7 +57,7 @@ function activityItem(enabled: boolean) {
   };
 }
 
-let _tray: SysTray | null = null;
+let _tray: InstanceType<typeof SysTray> | null = null;
 
 export function initTray(
   initialActivity: boolean,
@@ -52,6 +66,7 @@ export function initTray(
 ): void {
   let activityState = initialActivity;
 
+  ensureTrayBin();
   _tray = new SysTray({
     menu: {
       icon: loadIcon(),
@@ -70,7 +85,7 @@ export function initTray(
     copyDir: true,
   });
 
-  _tray.onClick((action) => {
+  _tray.onClick((action: { seq_id: number }) => {
     switch (action.seq_id) {
       case IDX_ACTIVITY:
         activityState = !activityState;

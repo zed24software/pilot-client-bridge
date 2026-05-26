@@ -3,3 +3,4 @@
 pnpm-lock.yaml
 token.json
 src/assets/icon.psd
+src/traybin-embedded.ts

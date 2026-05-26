@@ -71,7 +71,7 @@ function buildActivity() {
     details: parts.length ? parts.join("  |  ") : "On the ground",
     state: flightState.callsign
       ? `${flightState.callsign}${flightState.aircraft ? ` · ${flightState.aircraft}` : ""}`
-      : flightState.aircraft ?? "Flying",
+      : flightState.aircraft ?? "Preparing to fly...",
     timestamps: { start: timeStarted },
   };
 }
