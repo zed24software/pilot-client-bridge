@@ -1,6 +1,9 @@
-import SysTray, { MenuItem } from "systray2";
+import SysTrayImport, { MenuItem } from "systray2";
 import os from "os";
 import { join } from "path";
+
+const SysTray = ((SysTrayImport as any).default ?? SysTrayImport) as typeof SysTrayImport;
+type SysTrayInstance = InstanceType<typeof SysTrayImport>;
 
 type ClickableMenuItem = MenuItem & { click: () => void };
 
@@ -43,7 +46,7 @@ function activityItem(enabled: boolean) {
   };
 }
 
-let _tray: SysTray | null = null;
+let _tray: SysTrayInstance | null = null;
 
 export function initTray(
   initialActivity: boolean,
