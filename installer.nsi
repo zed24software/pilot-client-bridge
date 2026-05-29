@@ -8,6 +8,9 @@
 !ifndef APP_VERSION
   !define APP_VERSION   "1.0.0"
 !endif
+!ifndef APP_VI_VERSION
+  !define APP_VI_VERSION "1.0.0"
+!endif
 !define APP_PUBLISHER   "Zed's Software"
 !define APP_URL         "https://zedruc.net/24client"
 !define APP_EXE_SRC     "dist\24client-bridge.exe"    ; Source path (for File command)
@@ -26,7 +29,7 @@
 ; ===========================================================
 
 Name                "${APP_NAME} ${APP_VERSION}"
-OutFile             "dist\${APP_NAME}_Setup_v${APP_VERSION}.exe"
+OutFile             "dist\${APP_NAME}_Setup_v${APP_VI_VERSION}.exe"
 InstallDir          "${INSTALL_DIR}"
 InstallDirRegKey    HKLM "${REG_KEY}" "InstallPath"
 RequestExecutionLevel admin
@@ -34,7 +37,7 @@ SetCompressor       /SOLID lzma
 ShowInstDetails     show
 ShowUnInstDetails   show
 
-VIProductVersion                "${APP_VERSION}.0"
+VIProductVersion                "${APP_VI_VERSION}.0"
 VIAddVersionKey "ProductName"   "${APP_NAME}"
 VIAddVersionKey "ProductVersion" "${APP_VERSION}"
 VIAddVersionKey "CompanyName"   "${APP_PUBLISHER}"
