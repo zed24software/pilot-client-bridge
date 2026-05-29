@@ -5,7 +5,9 @@
 ; ============================================================
 
 !define APP_NAME        "24Client Bridge"
-!define APP_VERSION     "1.0.0"
+!ifndef APP_VERSION
+  !define APP_VERSION   "1.0.0"
+!endif
 !define APP_PUBLISHER   "Zed's Software"
 !define APP_URL         "https://zedruc.net/24client"
 !define APP_EXE_SRC     "dist\24client-bridge.exe"    ; Source path (for File command)
