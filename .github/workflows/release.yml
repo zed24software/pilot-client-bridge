@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-2022
+    runs-on: blacksmith-2vcpu-windows-2025
     permissions:
       contents: write
       actions: write
