@@ -203,6 +203,7 @@ app.get("/session", (_req: Request, res: Response) => {
 });
 
 app.get("/voice/status", (_req: Request, res: Response) => {
+  const creds = readVoiceCreds();
   res.json({
     status: 200,
     data: {
