@@ -2,6 +2,34 @@
 
 All notable changes to the 24Client Bridge project will be documented in this file.
 
+## [1.0.5] - 2026-05-29
+
+### Added
+- **Local OAuth flow**: New local auth server (`127.0.0.1:57331`) handles Discord OAuth2 callback directly, eliminating dependency on the external `auth_server` config field
+- **Voice credentials persistence**: New `voice-creds.ts` stores voice channel credentials to `%APPDATA%/pilot-client-bridge/voice-creds.json`, surviving restarts
+- **Per-scope token caching**: Token cache now keyed by scope (`token-activity.json`, `token-voice.json`, etc.) so activity and voice tokens no longer overwrite each other
+- **Callsign tray display**: System tray now shows current callsign via `updateCallsign()`
+- **Systray binary bundling**: Systray executable embedded at build time via `scripts/embed-tray-bin.mjs` and bundled in the NSIS installer
+
+### Fixed
+- Voice channel switching broken when Discord's RPC `AUTHENTICATE` command returned errors under certain account configurations — now works around the limitation with a local OAuth exchange
+- Token refresh would silently fail after expiry due to stale cached token file being shared between scopes
+- Installer created shortcut pointing to wrong path
+- CJS import error on startup in certain environments
+- Update checker failed to compare versions correctly in some cases
+- Systray icon not loading when binary path differed between dev and production builds
+
+### Changed
+- `auth_server` field removed from `rpc-config.json` — auth is now handled locally
+- Token cache file renamed from `token.json` to `token-<key>.json` to support multiple scopes (manual deletion of old `token.json` may be needed on upgrade)
+- Contributing guidelines added to README
+
+### Dependencies
+- Added **axios** (^1.16.1) for OAuth token exchange HTTP requests
+- Added **node-notifier** (^10.0.1) and **open** (^11.0.0)
+
+---
+
 ## [1.0.0-beta.1] - 2026-05-24
 
 ### Added - Initial Beta Release
