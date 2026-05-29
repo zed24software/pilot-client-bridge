@@ -42,7 +42,7 @@ jobs:
           echo "path=$file" >> $env:GITHUB_OUTPUT
 
       - name: Upload to GitHub Releases
-        if: github.event_name == 'release' && github.event.action == 'created'
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.event.release.tag_name || github.ref_name }}
           files: ${{ steps.installer.outputs.path }}
