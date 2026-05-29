@@ -2,23 +2,25 @@ name: Build & Release
 
 on:
   release:
-    types: [published]
+    types: [created]
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
     runs-on: blacksmith-2vcpu-windows-2025
-    permissions:
-      contents: write
-      actions: write
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout the repository
+        uses: actions/checkout@v4
 
-      - uses: oven-sh/setup-bun@v2
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
 
       - name: Install dependencies
         run: pnpm install
@@ -35,20 +37,8 @@ jobs:
           $file = Get-Item "dist\24Client Bridge_Setup_v*.exe" | Select-Object -First 1 -ExpandProperty FullName
           echo "path=$file" >> $env:GITHUB_OUTPUT
 
-      - name: Upload artifact
-        id: artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload to GitHub Releases
+        if: github.event_name == 'release' && github.event.action == 'created'
+        uses: softprops/action-gh-release@v2
         with:
-          name: installer
-          path: ${{ steps.installer.outputs.path }}
-          retention-days: 1
-
-      - name: Attach installer to release
-        run: gh release upload ${{ github.event.release.tag_name }} "${{ steps.installer.outputs.path }}" --clobber
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Delete artifact
-        run: gh api --method DELETE /repos/${{ github.repository }}/actions/artifacts/${{ steps.artifact.outputs.artifact-id }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          files: ${{ steps.installer.outputs.path }}
