@@ -34,7 +34,8 @@ jobs:
       - name: Build installer
         run: |
           $version = "${{ github.event.release.tag_name || github.ref_name }}".TrimStart('v')
-          & "C:\Program Files (x86)\NSIS\makensis.exe" /DAPP_VERSION=$version installer.nsi
+          $viVersion = $version -replace '-.*$', ''
+          & "C:\Program Files (x86)\NSIS\makensis.exe" /DAPP_VERSION=$version /DAPP_VI_VERSION=$viVersion installer.nsi
 
       - name: Resolve installer path
         id: installer
