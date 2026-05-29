@@ -3,9 +3,7 @@ import Opcodes, { Opcode } from "./types/opcodes";
 import { RPCRequest, RPCResponse } from "./types";
 import { RPCEvent } from "./types/events";
 import { RPCCommand } from "./types/commands";
-import { readCachedToken, exchangeCode } from "../token-cache";
-
-const RPC_SCOPES = ["rpc", "rpc.activities.write", "rpc.voice.read", "identify"];
+import { readCachedToken } from "../token-cache";
 
 export class DiscordRPC {
   private socket?: net.Socket;
@@ -20,7 +18,13 @@ export class DiscordRPC {
 
   private pending = new Map<string, { resolve: (data: any) => void; reject: (err: Error) => void }>();
 
-  constructor(private readonly clientId: string, private readonly authServer: string) {}
+  constructor(
+    private readonly clientId: string,
+    private readonly scopes: string[],
+    private readonly exchangeFn: (code: string) => Promise<string>,
+    private readonly tokenKey: string = "default",
+    private readonly authless: boolean = false
+  ) {}
 
   async connect(): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -48,8 +52,7 @@ export class DiscordRPC {
         const onError = () => {
           socket.removeAllListeners();
           socket.destroy();
-          if(done) {
-            /* already had a working connection at some point */
+          if (done) {
             index = 0;
             done = false;
           }
@@ -71,7 +74,7 @@ export class DiscordRPC {
     message.writeUInt32LE(Opcodes.HANDSHAKE, 0);
     message.writeUInt32LE(body.length, 4);
     body.copy(message, 8);
-    console.log("[RPC] sending handshake");
+    console.log(`[RPC:${this.tokenKey}] sending handshake`);
     this.socket?.write(message);
   }
 
@@ -96,21 +99,28 @@ export class DiscordRPC {
   private async onReady(userData: any) {
     this.isReady = true;
     if (userData) this.currentUser = userData;
-    console.log("[RPC] READY — starting auth");
 
+    if (this.authless) {
+      console.log(`[RPC:${this.tokenKey}] READY — skipping auth (authless mode)`);
+      this.isAuthenticated = true;
+      this.onAuthenticated?.();
+      return;
+    }
+
+    console.log(`[RPC:${this.tokenKey}] READY — starting auth`);
     try {
       await this.authenticate();
-      console.log("[RPC] authenticated");
+      console.log(`[RPC:${this.tokenKey}] authenticated`);
       await this.subscribeToEvents();
     } catch (err: any) {
-      console.error("[RPC] auth failed:", err.message);
+      console.error(`[RPC:${this.tokenKey}] auth failed:`, err.message);
     }
   }
 
   private async authenticate() {
-    const cached = readCachedToken();
+    const cached = readCachedToken(this.tokenKey);
     if (cached) {
-      console.log("[RPC] using cached token");
+      console.log(`[RPC:${this.tokenKey}] using cached token`);
       const authRes = await this.sendRequest(RPCCommand.AUTHENTICATE, { access_token: cached });
       if (authRes.data?.user) this.currentUser = authRes.data.user;
       this.isAuthenticated = true;
@@ -118,14 +128,13 @@ export class DiscordRPC {
       return;
     }
 
-    console.log("[RPC] no cached token — running AUTHORIZE");
+    console.log(`[RPC:${this.tokenKey}] no cached token — running AUTHORIZE`);
     const authorizeRes = await this.sendRequest(RPCCommand.AUTHORIZE, {
       client_id: this.clientId,
-      scopes: RPC_SCOPES,
+      scopes: this.scopes,
     });
     const code: string = authorizeRes.data.code;
-
-    const access_token = await exchangeCode(this.authServer, code);
+    const access_token = await this.exchangeFn(code);
 
     const authRes = await this.sendRequest(RPCCommand.AUTHENTICATE, { access_token });
     if (authRes.data?.user) this.currentUser = authRes.data.user;
@@ -135,10 +144,10 @@ export class DiscordRPC {
 
   private async subscribeToEvents() {
     await this.subscribe(RPCEvent.VOICE_CONNECTION_STATUS).catch((err: Error) =>
-      console.warn(`[RPC] VOICE_CONNECTION_STATUS subscribe failed: ${err.message}`)
+      console.warn(`[RPC:${this.tokenKey}] VOICE_CONNECTION_STATUS subscribe failed: ${err.message}`)
     );
     await this.subscribe(RPCEvent.CURRENT_USER_UPDATE).catch((err: Error) =>
-      console.warn(`[RPC] CURRENT_USER_UPDATE subscribe failed: ${err.message}`)
+      console.warn(`[RPC:${this.tokenKey}] CURRENT_USER_UPDATE subscribe failed: ${err.message}`)
     );
   }
 
@@ -162,7 +171,7 @@ export class DiscordRPC {
       try {
         this.handlePacket(op, JSON.parse(json) as RPCResponse<any>);
       } catch (err) {
-        console.error("[RPC] packet parse error:", err);
+        console.error(`[RPC:${this.tokenKey}] packet parse error:`, err);
       }
     }
   }

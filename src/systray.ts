@@ -25,10 +25,11 @@ function loadIcon() {
 
 const IDX_DISCORD = 0;
 const IDX_CHANNEL = 1;
-const IDX_SEP1 = 2;
-const IDX_ACTIVITY = 3;
-const IDX_SEP2 = 4;
-const IDX_EXIT = 5;
+const IDX_CALLSIGN = 2;
+const IDX_SEP1 = 3;
+const IDX_ACTIVITY = 4;
+const IDX_SEP2 = 5;
+const IDX_EXIT = 6;
 
 function discordItem(connected: boolean) {
   return {
@@ -39,9 +40,16 @@ function discordItem(connected: boolean) {
   };
 }
 
-function channelItem(name: string | null) {
+function channelItem(name: string | null, frequency?: string | null) {
+  const label = name
+    ? frequency ? `${name} (${frequency})` : name
+    : "None";
+  return { title: `Channel: ${label}`, tooltip: "", enabled: false, checked: false };
+}
+
+function callsignItem(callsign: string | null) {
   return {
-    title: `Channel: ${name ?? "None"}`,
+    title: `Callsign: ${callsign ?? "—"}`,
     tooltip: "",
     enabled: false,
     checked: false,
@@ -75,6 +83,7 @@ export function initTray(
       items: [
         discordItem(false),
         channelItem(null),
+        callsignItem(null),
         SysTray.separator,
         activityItem(initialActivity),
         SysTray.separator,
@@ -104,8 +113,12 @@ export function updateDiscordStatus(connected: boolean): void {
   _tray?.sendAction({ type: "update-item", seq_id: IDX_DISCORD, item: discordItem(connected) });
 }
 
-export function updateChannel(name: string | null): void {
-  _tray?.sendAction({ type: "update-item", seq_id: IDX_CHANNEL, item: channelItem(name) });
+export function updateChannel(name: string | null, frequency?: string | null): void {
+  _tray?.sendAction({ type: "update-item", seq_id: IDX_CHANNEL, item: channelItem(name, frequency) });
+}
+
+export function updateCallsign(callsign: string | null): void {
+  _tray?.sendAction({ type: "update-item", seq_id: IDX_CALLSIGN, item: callsignItem(callsign) });
 }
 
 export function updateActivity(enabled: boolean): void {

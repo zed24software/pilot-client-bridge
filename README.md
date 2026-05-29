@@ -93,6 +93,38 @@ Each entry maps:
 - `frequency`: Radio frequency identifier
 - `channelId`: Discord voice channel ID
 
+## Voice Channel Setup
+
+Voice channel switching requires each user to provide their own Discord application credentials. This avoids the need for central Discord RPC approval — app owners always have access to their own app.
+
+### Step 1 — Create a Discord application
+
+1. Go to [discord.com/developers/applications](https://discord.com/developers/applications)
+2. Click **New Application** and name it anything
+3. Go to **OAuth2 → Redirects** and add: `http://localhost:57331/callback`
+4. Copy your **Client ID** and **Client Secret**
+
+### Step 2 — Provide credentials to the bridge
+
+```http
+POST http://localhost:57330/voice/credentials
+Content-Type: application/json
+
+{
+  "client_id": "your_client_id",
+  "client_secret": "your_client_secret"
+}
+```
+
+Credentials are saved to `%APPDATA%\pilot-client-bridge\voice-creds.json` and restored automatically on next launch.
+
+### Step 3 — Authorize
+
+A Discord overlay prompt will appear asking you to authorize voice scopes. Accept it. Voice channel switching is now active.
+
+To check status: `GET http://localhost:57330/voice/status`  
+To remove credentials: `DELETE http://localhost:57330/voice/credentials`
+
 ## Usage
 
 Once running, the application:
