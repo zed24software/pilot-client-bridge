@@ -1,232 +1,81 @@
 # 24Client Bridge
 
-A bridge application that connects the 24Client web client to Discord RPC, enabling dynamic flight status display in Discord and voice channel switching through RPC commands.
+24Client Bridge is a small background app that connects 24Client to Discord. It shows your current flight as a Discord status and lets you automatically switch voice channels when you change frequencies.
 
-## Contributing
-
-We are not (yet) accepting any pull requests, any requests opened while this message is still here will simply be closed
-
-## Features
-
-- **Dynamic Flight Status Display**: Automatically updates your Discord activity with real-time flight information including altitude, heading, callsign, and aircraft type
-- **Voice Channel Switching**: Programmatically switch Discord voice channels based on flight frequencies
-- **System Tray Integration**: Runs as a background service with system tray controls
-- **Status Monitoring**: Visual indicators for Discord connection status and current voice channel
-- **REST API**: Exposes endpoints for controlling Discord RPC functionality
-
-## Requirements
-
-### Windows
-- Windows 10 or later
-- Discord must be running with RPC enabled
-
-### Linux
-- Node.js 18+ or Bun runtime
-- pnpm or npm package manager
-- Discord RPC support on your system
+---
 
 ## Installation
 
-### Windows (Pre-compiled Installer)
+1. Download the latest installer from the [Releases](../../releases) tab
+2. Run the installer and follow the steps
+3. Launch the app from your Start Menu or Desktop shortcut
 
-1. Download the latest installer from the releases tab
-2. Run the installer and follow the installation wizard
-3. The application will be installed to your Program Files directory
-4. A shortcut will be created in your Start Menu
-5. Run the application from the Start Menu or use the system tray icon
+That's it. The app runs in the background — look for its icon in your system tray.
 
-### Linux (Self-Compile)
+---
 
-1. **Clone or download the repository**
-   ```bash
-   git clone https://github.com/zed24software/pilot-client-bridge.git
-   cd pilot-client-bridge
-   ```
+## Setup
 
-2. **Install dependencies**
-   ```bash
-   pnpm install
-   ```
+### Discord Status (Flight Activity)
 
-3. **Build the application**
-   ```bash
-   pnpm run build
-   ```
-   
-   This will compile the TypeScript source code and create an executable in `dist/24client-bridge`
+This works automatically. Once the bridge is running and Discord is open, your flight info will appear in your Discord status.
 
-4. **Run the application**
-   ```bash
-   ./dist/24client-bridge
-   ```
+### Voice Channel Switching
 
-   Or run in development mode with auto-reload:
-   ```bash
-   pnpm run dev
-   ```
+To enable automatic voice channel switching, you need to create a free Discord app and link it to the bridge. This is a one-time setup.
 
-## Configuration
+**Step 1 — Create a Discord application**
 
-The application uses two main configuration files located in the `src/` directory  
-Changing these settings is not recommended nor needed and is likely to break functionality.
+1. Go to [discord.com/developers/applications](https://discord.com/developers/applications) and log in
+2. Click **New Application**, give it any name, and click **Create**
+3. On the left sidebar, click **OAuth2**
+4. Under **Redirects**, click **Add Redirect** and paste: `http://localhost:57331/callback`
+5. Click **Save Changes**
+6. Copy your **Client ID** and **Client Secret** from the same page
 
-### `rpc-config.json`
+**Step 2 — Enter your credentials in 24Client**
 
-Configure Discord RPC connection settings:
-- `client_id`: Discord application ID (default: 1507887570154162385)
-- `auth_server`: Local authentication server address (default: http://localhost)
-- `activity_enabled`: Enable/disable automatic activity updates (default: true)
+Open 24Client and enter the Client ID and Client Secret in the bridge settings. The app saves these automatically — you only need to do this once.
 
-### `channels.json`
+**Step 3 — Authorize**
 
-Define voice channel mappings between radio frequencies and Discord channels:
-```json
-{
-  "position": "IRCC",
-  "frequency": "124.850",
-  "channelId": "1409259489580023898"
-}
-```
+A Discord prompt will pop up asking you to allow voice permissions. Click **Authorize**. Voice channel switching is now active.
 
-Each entry maps:
-- `position`: Position name (e.g., IRCC, IRFD_TWR)
-- `frequency`: Radio frequency identifier
-- `channelId`: Discord voice channel ID
+---
 
-## Voice Channel Setup
+## The Publisher Certificate (Optional)
 
-Voice channel switching requires each user to provide their own Discord application credentials. This avoids the need for central Discord RPC approval — app owners always have access to their own app.
+During installation, you may be asked if you want to trust the Zed's Software publisher certificate. This is completely optional and the app works fine without it.
 
-### Step 1 — Create a Discord application
+If you accept, Windows will recognize Zed's Software as a verified publisher, so future UAC prompts will show the company name instead of "Unknown Publisher." You can remove it at any time through Windows Certificate Manager.
 
-1. Go to [discord.com/developers/applications](https://discord.com/developers/applications)
-2. Click **New Application** and name it anything
-3. Go to **OAuth2 → Redirects** and add: `http://localhost:57331/callback`
-4. Copy your **Client ID** and **Client Secret**
-
-### Step 2 — Provide credentials to the bridge
-
-```http
-POST http://localhost:57330/voice/credentials
-Content-Type: application/json
-
-{
-  "client_id": "your_client_id",
-  "client_secret": "your_client_secret"
-}
-```
-
-Credentials are saved to `%APPDATA%\pilot-client-bridge\voice-creds.json` and restored automatically on next launch.
-
-### Step 3 — Authorize
-
-A Discord overlay prompt will appear asking you to authorize voice scopes. Accept it. Voice channel switching is now active.
-
-To check status: `GET http://localhost:57330/voice/status`  
-To remove credentials: `DELETE http://localhost:57330/voice/credentials`
-
-## Usage
-
-Once running, the application:
-
-1. Connects to Discord RPC on startup
-2. Displays status in the system tray
-3. Listens for commands from the 24Client web client on `http://127.0.0.1:57330`
-4. Updates Discord activity every 10 seconds with current flight data
-
-### API Endpoints
-
-#### `GET /`
-Health check endpoint
-```
-Response: { status: 200, message: "API online", v: "1.0.0", timeOnlineSeconds: number }
-```
-
-#### `POST /rpc/select-voice-channel`
-Switch to a Discord voice channel based on frequency
-```json
-{
-  "frequency": "124.850",
-  "navigate": true,
-  "timeout": 5000
-}
-```
-
-#### `GET /rpc/voice-connection-status`
-Get current voice connection status
-```
-Response: { status: 200, data: any }
-```
-
-#### `POST /rpc/set-activity`
-Manually set Discord activity status
-```json
-{
-  "pid": 1234,
-  "activity": {
-    "details": "ALT 35000ft | HDG 090°",
-    "state": "N123AB · Boeing 777"
-  }
-}
-```
-
-## System Requirements
-
-Electricity
+---
 
 ## Troubleshooting
 
-### Discord Connection Failed
-- Ensure Discord is running
-- Check that Discord has RPC enabled in settings
-- Verify the `client_id` in `rpc-config.json` is correct
+**The app isn't showing my flight status on Discord**
+- Make sure Discord is open and running
+- Make sure 24Client Bridge is running (check your system tray)
 
-### Voice Channel Switching Not Working
-- Verify the frequency exists in `channels.json`
-- Check that the Discord channel ID is correct
-- Ensure you're in the ATC24 Discord server
+**Voice channel switching isn't working**
+- Double-check that you completed the Discord app setup above
+- Make sure you're connected to the ATC24 Discord server
 
-### Application Won't Start (Linux)
-- Verify Node.js/Bun is installed: `node --version` or `bun --version`
-- Run `pnpm install` again to ensure all dependencies are installed
-- Check the console output for specific error messages
-
-## Building from Source
-
-### Prerequisites
-- Bun runtime (recommended) or Node.js 18+
-- pnpm package manager
-- NSIS (for Windows installer only): https://nsis.sourceforge.io/
-
-### Build Steps
-
-1. **Development build with watch mode**
-   ```bash
-   pnpm run dev
-   ```
-
-2. **Production build**
-   ```bash
-   pnpm run build
-   ```
-
-3. **Build Windows installer** (Windows only)
-   ```bash
-   pnpm run build-installer
-   ```
-
-4. **Complete build with installer**
-   ```bash
-   pnpm run serve
-   ```
+---
 
 ## Support
 
-For issues, feature requests, or contributions, please refer to the Zed Software Discord.
+Need help? Join the Zed Software Discord.
+
+---
+
+## Contributing
+
+Not currently accepting pull requests.
 
 ## License
 
-This project is licensed under the GNU General Public License v3.0.
+GNU General Public License v3.0 — see [LICENSE](LICENSE)
 
 ## Credits
 
