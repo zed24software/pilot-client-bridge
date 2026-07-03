@@ -1,4 +1,5 @@
 import net from "node:net";
+import path from "path";
 import Opcodes, { Opcode } from "./types/opcodes";
 import { RPCRequest, RPCResponse } from "./types";
 import { RPCEvent } from "./types/events";
@@ -24,20 +25,49 @@ export class DiscordRPC {
     private readonly exchangeFn: (code: string) => Promise<string>,
     private readonly tokenKey: string = "default",
     private readonly authless: boolean = false
-  ) {}
+  ) { }
+
+  private getIpcCandidates(index: number): string[] {
+    if (process.platform === "win32") {
+      return [`\\\\?\\pipe\\discord-ipc-${index}`];
+    }
+
+    const bases = [
+      process.env.XDG_RUNTIME_DIR,
+      process.env.TMPDIR,
+      process.env.TMP,
+      process.env.TEMP,
+      "/tmp",
+    ].filter((b): b is string => !!b);
+
+    const seen = new Set<string>();
+    const uniqueBases = bases.filter((b) => {
+      if (seen.has(b)) return false;
+      seen.add(b);
+      return true;
+    });
+
+    return uniqueBases.map((base) => path.join(base, `discord-ipc-${index}`));
+  }
 
   async connect(): Promise<void> {
     return new Promise((resolve, reject) => {
-      let index = 0;
+      // Build the full candidate list: all paths for index 0, then index 1, ... up to 9
+      const candidates: string[] = [];
+      for (let index = 0; index <= 9; index++) {
+        candidates.push(...this.getIpcCandidates(index));
+      }
+
+      let i = 0;
       let done = false;
 
       const tryNext = () => {
-        if (index > 9) {
+        if (i >= candidates.length) {
           if (!done) reject(new Error("No Discord IPC pipe found"));
           return;
         }
 
-        const pipe = `\\\\?\\pipe\\discord-ipc-${index++}`;
+        const pipe = candidates[i++];
         const socket = net.connect(pipe);
 
         const onConnect = () => {
@@ -52,10 +82,6 @@ export class DiscordRPC {
         const onError = () => {
           socket.removeAllListeners();
           socket.destroy();
-          if (done) {
-            index = 0;
-            done = false;
-          }
           tryNext();
         };
 
