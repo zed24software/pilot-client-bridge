@@ -66,6 +66,9 @@ jobs:
         run: pnpm install
 
       - name: Build executables
+        env:
+
+          BUN_NO_CODESIGN_MACHO_BINARY: "1"
         run: pnpm run build:mac
 
       - name: Package binaries
@@ -73,6 +76,8 @@ jobs:
         run: |
           version="${GITHUB_REF_NAME#v}"
           chmod +x dist/24client-bridge-mac-arm64 dist/24client-bridge-mac-x64
+          codesign --force -s - dist/24client-bridge-mac-arm64
+          codesign --force -s - dist/24client-bridge-mac-x64
           ditto -c -k --sequesterRsrc dist/24client-bridge-mac-arm64 "dist/24Client Bridge_v${version}_macos-arm64.zip"
           ditto -c -k --sequesterRsrc dist/24client-bridge-mac-x64 "dist/24Client Bridge_v${version}_macos-x64.zip"
 
