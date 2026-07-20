@@ -9,19 +9,20 @@
 ### Windows
 
 1. Download the latest installer from the [Releases](../../releases) tab
-2. Run the installer and follow the steps
-3. Launch the app from your Start Menu or Desktop shortcut
+2. Run the installer and follow the steps. You may select for the app to run on startup if you wish.
+3. Launch the app from your Start Menu or Desktop shortcut (if selected)
 
-That's it. The app runs in the background — look for its icon in your system tray.
+That's it. The app runs in the background. You should look for its icon in your system tray.
 
 ### macOS
 
 1. Download the latest `24Client Bridge_v*_macos-arm64.zip` (Apple Silicon) or `..._macos-x64.zip` (Intel) from the [Releases](../../releases) tab
 2. Unzip it and move `24client-bridge-mac-arm64` (or `-x64`) somewhere convenient, e.g. `/Applications`
-3. Since the binary isn't notarized, the first launch requires right-click → **Open** → **Open** to bypass Gatekeeper's warning
+3. **IMPORTANT: As the binary isn't code signed (it costs $99 a year), the first launch you to follow [this](https://support.apple.com/en-us/guide/mac-help/mh40616/mac) guide from Apple to bypass macOS Gatekeeper's warning.**
+
 4. Look for its icon in the menu bar
 
-There is no installer for macOS — the app is a single executable you run directly.
+There is no installer for macOS as the app is a single executable you run directly. You may drag this into your applications folder for quick access.
 
 ---
 
@@ -56,7 +57,7 @@ A Discord prompt will pop up asking you to allow voice permissions. Click **Auth
 
 ## The Publisher Certificate (Optional)
 
-During installation, you may be asked if you want to trust the Zed's Software publisher certificate. This is completely optional and the app works fine without it.
+During installation on Windows, you may be asked if you want to trust the Zed's Software publisher certificate. This is completely optional and the app works fine without it.
 
 If you accept, Windows will recognize Zed's Software as a verified publisher, so future UAC prompts will show the company name instead of "Unknown Publisher." You can remove it at any time through Windows Certificate Manager.
 
@@ -76,7 +77,7 @@ If you accept, Windows will recognize Zed's Software as a verified publisher, so
 
 ## Support
 
-Need help? Join the Zed Software Discord.
+Need help? Join the [Zed Software Discord](https://discord.com/invite/EHxWfKEbrq).
 
 ---
 
