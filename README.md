@@ -15,11 +15,10 @@
 That's it. The app runs in the background. You should look for its icon in your system tray.
 
 ### macOS
-
+#### IMPORTANT: Safari isn't supported. Please use a modern browser like Firefox or Chrome.
 1. Download the latest `24Client Bridge_v*_macos-arm64.zip` (Apple Silicon) or `..._macos-x64.zip` (Intel) from the [Releases](../../releases) tab
 2. Unzip it and move `24client-bridge-mac-arm64` (or `-x64`) somewhere convenient, e.g. `/Applications`
-3. **IMPORTANT: As the binary isn't code signed (it costs $99 a year), the first launch you to follow [this](https://support.apple.com/en-us/guide/mac-help/mh40616/mac) guide from Apple to bypass macOS Gatekeeper's warning.**
-
+3. **IMPORTANT: As the binary isn't code signed (it costs $99 a year), the first launch requires you to follow [this](https://support.apple.com/en-us/guide/mac-help/mh40616/mac) guide from Apple to bypass macOS Gatekeeper's warning.**
 4. Look for its icon in the menu bar
 
 There is no installer for macOS as the app is a single executable you run directly. You may drag this into your applications folder for quick access.

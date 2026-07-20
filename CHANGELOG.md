@@ -2,6 +2,32 @@
 
 All notable changes to the 24Client Bridge project will be documented in this file.
 
+## [1.0.6] - 2026-07-20
+
+### Added
+- **macOS support**: The bridge now builds and ships for both Apple Silicon and Intel Macs (`bun-darwin-arm64` / `bun-darwin-x64`), with the systray helper binary embedded for both platforms via `scripts/embed-tray-bin.mjs`
+- **Cross-platform app data paths**: New `paths.ts` resolves the correct config directory per OS (`%APPDATA%` on Windows, `~/Library/Application Support` on macOS), used by `voice-creds.ts` and `token-cache.ts`
+- **Windows publisher certificate**: Installer now bundles the Zed's Software code-signing certificate and offers to install it as a Trusted Publisher
+- **CI**: Release workflow now signs the Windows installer with `signtool` and builds/uploads signed macOS zip artifacts via a dedicated Blacksmith macOS runner
+
+### Fixed
+- Discord RPC IPC socket path resolution now follows Discord's documented lookup order, improving connection reliability
+- macOS builds reported "damaged file" in Gatekeeper — caused by a Bun 1.3.12 regression that truncates ad-hoc code signatures on larger binaries; builds now skip Bun's built-in signing and are explicitly ad-hoc signed with `codesign`
+
+### Changed
+- Windows executable now compiled against the x64 baseline target for compatibility with older CPUs
+- Installer versioning and NSIS packaging fixes so the installer version is derived correctly from the release tag
+- README simplified and reorganized, now covers macOS installation alongside Windows
+- Release workflow no longer relies on static tokens for authentication
+
+### Dependencies
+- Bumped **axios** to `^1.18.1`
+- Bumped **@types/node** to `^25.9.4`
+
+Full Changelog: [`v1.0.5-beta...v1.0.6`](../../compare/v1.0.5-beta...v1.0.6)
+
+---
+
 ## [1.0.5] - 2026-05-29
 
 ### Added
