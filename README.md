@@ -56,7 +56,7 @@ A Discord prompt will pop up asking you to allow voice permissions. Click **Auth
 
 ## The Publisher Certificate (Optional)
 
-During installation, you may be asked if you want to trust the Zed's Software publisher certificate. This is completely optional and the app works fine without it.
+During installation on Windows, you may be asked if you want to trust the Zed's Software publisher certificate. This is completely optional and the app works fine without it.
 
 If you accept, Windows will recognize Zed's Software as a verified publisher, so future UAC prompts will show the company name instead of "Unknown Publisher." You can remove it at any time through Windows Certificate Manager.
 
