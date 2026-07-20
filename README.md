@@ -6,11 +6,22 @@
 
 ## Installation
 
+### Windows
+
 1. Download the latest installer from the [Releases](../../releases) tab
 2. Run the installer and follow the steps
 3. Launch the app from your Start Menu or Desktop shortcut
 
 That's it. The app runs in the background — look for its icon in your system tray.
+
+### macOS
+
+1. Download the latest `24Client Bridge_v*_macos-arm64.zip` (Apple Silicon) or `..._macos-x64.zip` (Intel) from the [Releases](../../releases) tab
+2. Unzip it and move `24client-bridge-mac-arm64` (or `-x64`) somewhere convenient, e.g. `/Applications`
+3. Since the binary isn't notarized, the first launch requires right-click → **Open** → **Open** to bypass Gatekeeper's warning
+4. Look for its icon in the menu bar
+
+There is no installer for macOS — the app is a single executable you run directly.
 
 ---
 

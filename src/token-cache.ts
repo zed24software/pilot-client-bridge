@@ -1,7 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
+import { appDataDir } from "./paths";
 
-const TOKEN_DIR = path.join(process.env.APPDATA ?? process.env.HOME ?? ".", "pilot-client-bridge");
+const TOKEN_DIR = appDataDir("pilot-client-bridge");
 
 interface TokenCache {
   access_token: string;

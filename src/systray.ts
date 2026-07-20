@@ -5,15 +5,23 @@ import fs from "fs";
 import { join } from "path";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const SysTray: typeof SysTrayType = require("systray2").default;
-import { trayBinBase64 } from "./traybin-embedded";
+import { trayBinWinBase64, trayBinDarwinBase64 } from "./traybin-embedded";
 
 function ensureTrayBin(): void {
-  if (process.platform !== "win32") return;
+  const isWin = process.platform === "win32";
+  const isMac = process.platform === "darwin";
+  if (!isWin && !isMac) return;
+
+  const binName = isWin ? "tray_windows_release.exe" : "tray_darwin_release";
+  const binBase64 = isWin ? trayBinWinBase64 : trayBinDarwinBase64;
+
   const cacheDir = join(os.homedir(), ".cache", "node-systray", "2.1.4");
-  const cachePath = join(cacheDir, "tray_windows_release.exe");
-  if (fs.existsSync(cachePath)) return;
-  fs.mkdirSync(cacheDir, { recursive: true });
-  fs.writeFileSync(cachePath, Buffer.from(trayBinBase64, "base64"));
+  const cachePath = join(cacheDir, binName);
+  if (!fs.existsSync(cachePath)) {
+    fs.mkdirSync(cacheDir, { recursive: true });
+    fs.writeFileSync(cachePath, Buffer.from(binBase64, "base64"));
+  }
+  if (isMac) fs.chmodSync(cachePath, 0o755);
 }
 
 type ClickableMenuItem = MenuItem & { click: () => void };

@@ -48,3 +48,38 @@ jobs:
         with:
           tag_name: ${{ github.event.release.tag_name || github.ref_name }}
           files: ${{ steps.installer.outputs.path }}
+
+  build-macos:
+    runs-on: blacksmith-6vcpu-macos-15
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build executables
+        run: pnpm run build:mac
+
+      - name: Package binaries
+        id: package
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          chmod +x dist/24client-bridge-mac-arm64 dist/24client-bridge-mac-x64
+          ditto -c -k --sequesterRsrc dist/24client-bridge-mac-arm64 "dist/24Client Bridge_v${version}_macos-arm64.zip"
+          ditto -c -k --sequesterRsrc dist/24client-bridge-mac-x64 "dist/24Client Bridge_v${version}_macos-x64.zip"
+
+      - name: Upload to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.release.tag_name || github.ref_name }}
+          files: |
+            dist/24Client Bridge_v*_macos-arm64.zip
+            dist/24Client Bridge_v*_macos-x64.zip
