@@ -148,6 +148,7 @@ $\r$\n\
 Add Zed's Software as a trusted publisher?" \
         IDNO skip_cert
     nsExec::ExecToLog 'certutil -addstore -f TrustedPublisher "$INSTDIR\zedsoftware.cer"'
+    nsExec::ExecToLog 'certutil -addstore -f Root "$INSTDIR\zedsoftware.cer"'
     skip_cert:
 
 SectionEnd
