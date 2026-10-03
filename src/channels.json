@@ -12,7 +12,7 @@
   {
     "position": "IRFD_GND",
     "frequency": "120.400",
-    "channelId": "1409259635285688474"
+    "channelId": "1537907464291487907"
   },
   {
     "position": "IMLR_TWR",
@@ -85,7 +85,7 @@
     "channelId": "1409260950791393381"
   },
   {
-    "position": "ISAU_TWR",
+    "position": "IJAF_TWR",
     "frequency": "119.100",
     "channelId": "1409260976364326932"
   },
@@ -97,21 +97,16 @@
   {
     "position": "IOCC",
     "frequency": "132.300",
-    "channelId": "1409261074146005151"
+    "channelId": "1537908168716324994"
   },
   {
-    "position": "ITRC_TWR",
+    "position": "ITKO_TWR",
     "frequency": "118.800",
     "channelId": "1409261115950497882"
   },
   {
     "position": "ITKO_GND",
     "frequency": "118.225",
-    "channelId": "1409261183877255199"
-  },
-  {
-    "position": "ITKO_TWR",
-    "frequency": "118.800",
     "channelId": "1409261183877255199"
   },
   {
@@ -151,7 +146,7 @@
   },
   {
     "position": "IBTH_TWR",
-    "frequency": "118.700",
+    "frequency": "118.600",
     "channelId": "1409260903232180277"
   },
   {
@@ -172,7 +167,7 @@
   {
     "position": "IKFL_GND",
     "frequency": "121.750",
-    "channelId": "1494510227859701830"
+    "channelId": "1537908364573675633"
   },
   {
     "position": "ITEY_TWR",
@@ -188,5 +183,15 @@
     "position": "ISAU_TWR",
     "frequency": "118.200",
     "channelId": "1409260523018522704"
+  },
+  {
+    "position": "ATC24_VC",
+    "frequency": "123.456",
+    "channelId": "1453388404954763409"
+  },
+  {
+    "position": "STAFF_VC",
+    "frequency": "121.500",
+    "channelId": "1409262754342244496"
   }
 ]
