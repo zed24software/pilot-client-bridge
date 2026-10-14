@@ -8,17 +8,16 @@
     "build": "node scripts/embed-tray-bin.mjs && bun build ./src/index.ts --compile --target=bun-windows-x64-baseline --outfile ./dist/24client-bridge --windows-icon=src/assets/icon.ico --windows-title=\"24client-bridge\" --windows-description=\"Bridge application connecting 24client to Discord\" --windows-copyright=\"Zedruc and awdev_\"",
     "build:mac-arm64": "node scripts/embed-tray-bin.mjs && bun build ./src/index.ts --compile --target=bun-darwin-arm64 --outfile ./dist/24client-bridge-mac-arm64",
     "build:mac-x64": "node scripts/embed-tray-bin.mjs && bun build ./src/index.ts --compile --target=bun-darwin-x64 --outfile ./dist/24client-bridge-mac-x64",
-    "build:mac": "pnpm build:mac-arm64 && pnpm build:mac-x64",
+    "build:mac": "bun run build:mac-arm64 && bun run build:mac-x64",
     "build:linux-x64": "node scripts/embed-tray-bin.mjs && bun build ./src/index.ts --compile --target=bun-linux-x64 --outfile ./dist/24client-bridge-linux-x64",
     "build:linux-arm64": "node scripts/embed-tray-bin.mjs && bun build ./src/index.ts --compile --target=bun-linux-arm64 --outfile ./dist/24client-bridge-linux-arm64",
     "build:linux": "bun run build:linux-x64 && bun run build:linux-arm64",
-    "build-installer": "pnpm build && node scripts/build-installer.mjs",
-    "serve": "pnpm run build && pnpm build-installer"
+    "build-installer": "bun run build && node scripts/build-installer.mjs",
+    "serve": "bun run build && bun build-installer"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.14.0",
   "dependencies": {
     "axios": "^1.18.1",
     "cors": "^2.8.6",
