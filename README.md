@@ -23,6 +23,13 @@ That's it. The app runs in the background. You should look for its icon in your 
 
 There is no installer for macOS as the app is a single executable you run directly. You may drag this into your applications folder for quick access.
 
+### Linux
+#### IMPORTANT: Flatpak Discord isn't supported due to the sandboxed environment in which flatpak apps run
+1. Download the latest `24Client Bridge_v*_linux-x64.zip` (Intel/AMD) or `-arm64.zip` (ARM Processors) from the [Releases](../../releases) tab
+2. Unzip it and move the executable `24client-bridge-linux-x64` (or `-arm64`) somewhere convenient, e.g. `/Applications`
+3. Make sure the binary is executable (`chmod +x <file>`)
+4. Look for its icon in the menu bar after launching
+
 ---
 
 ## Setup
