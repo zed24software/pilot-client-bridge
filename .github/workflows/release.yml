@@ -69,11 +69,11 @@ jobs:
         id: package
         run: |
           version="${GITHUB_REF_NAME#v}"
-          chmod +x dist/24client-bridge-linux-arm64 dist/24client-bridge-linux-x64
-          codesign --force -s - dist/24client-bridge-linux-arm64
-          codesign --force -s - dist/24client-bridge-linux-x64
-          ditto -c -k --sequesterRsrc dist/24client-bridge-linux-arm64 "dist/24Client Bridge_v${version}_macos-arm64.zip"
-          ditto -c -k --sequesterRsrc dist/24client-bridge-linux-x64 "dist/24Client Bridge_v${version}_macos-x64.zip"
+          chmod +x dist/24client-bridge-mac-arm64 dist/24client-bridge-mac-x64
+          codesign --force -s - dist/24client-bridge-mac-arm64
+          codesign --force -s - dist/24client-bridge-mac-x64
+          ditto -c -k --sequesterRsrc dist/24client-bridge-mac-arm64 "dist/24Client Bridge_v${version}_macos-arm64.zip"
+          ditto -c -k --sequesterRsrc dist/24client-bridge-mac-x64 "dist/24Client Bridge_v${version}_macos-x64.zip"
 
       - name: Upload to GitHub Releases
         uses: softprops/action-gh-release@v2
