@@ -105,7 +105,7 @@ Section "${APP_NAME} Core" SecCore
     SetOutPath "$INSTDIR"
 
     File "${APP_EXE_SRC}"          ; Copies dist\24client-bridge.exe → $INSTDIR\24client-bridge.exe
-    File "node_modules\.pnpm\systray2@2.1.4\node_modules\systray2\traybin\tray_windows_release.exe"
+    File "node_modules\systray2\traybin\tray_windows_release.exe"
     File "${APP_CERT}"
     
     WriteRegStr HKLM "${REG_KEY}" "InstallPath" "$INSTDIR"

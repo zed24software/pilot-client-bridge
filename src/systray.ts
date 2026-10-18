@@ -5,15 +5,46 @@ import fs from "fs";
 import { join } from "path";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const SysTray: typeof SysTrayType = require("systray2").default;
-import { trayBinWinBase64, trayBinDarwinBase64 } from "./traybin-embedded";
+import { trayBinWinBase64, trayBinDarwinBase64, trayBinLinux64 } from "./traybin-embedded";
+
+const trayBins = new Map<NodeJS.Platform, { binName: string; binBase64: string }>([
+  ["linux", {
+    binName: "tray_linux_release",
+    binBase64: trayBinLinux64
+  }],
+  ["win32", {
+    binName: "tray_windows_release.exe",
+    binBase64: trayBinWinBase64
+  }],
+  ["darwin", {
+    binName: "tray_darwin_release",
+    binBase64: trayBinDarwinBase64
+  }],
+]);
+
+function isMac() {
+  return os.platform() === "darwin";
+}
+
+function isLinux() {
+  return os.platform() === "linux";
+}
 
 function ensureTrayBin(): void {
-  const isWin = process.platform === "win32";
-  const isMac = process.platform === "darwin";
-  if (!isWin && !isMac) return;
+  const supportedPlatforms = [...trayBins.keys()];
+  const platform = os.platform();
 
-  const binName = isWin ? "tray_windows_release.exe" : "tray_darwin_release";
-  const binBase64 = isWin ? trayBinWinBase64 : trayBinDarwinBase64;
+  if(!supportedPlatforms.includes(platform)) {
+    console.error(`Platform ${platform} is not supported`);
+    return;
+  }
+
+  const trayBinInfo = trayBins.get(platform);
+  if(!trayBinInfo) {
+    console.error(`No tray binary for platform "${platform}"`);
+    return;
+  }
+  const {binName, binBase64} = trayBinInfo;
 
   const cacheDir = join(os.homedir(), ".cache", "node-systray", "2.1.4");
   const cachePath = join(cacheDir, binName);
@@ -21,7 +52,7 @@ function ensureTrayBin(): void {
     fs.mkdirSync(cacheDir, { recursive: true });
     fs.writeFileSync(cachePath, Buffer.from(binBase64, "base64"));
   }
-  if (isMac) fs.chmodSync(cachePath, 0o755);
+  if (isMac() || isLinux()) fs.chmodSync(cachePath, 0o755);
 }
 
 type ClickableMenuItem = MenuItem & { click: () => void };

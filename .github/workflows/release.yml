@@ -19,14 +19,11 @@ jobs:
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
 
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
-
       - name: Install dependencies
-        run: pnpm install
+        run: bun install
 
       - name: Build executable
-        run: pnpm run build
+        run: bun run build
 
       - name: Install NSIS
         run: choco install nsis -y
@@ -59,17 +56,14 @@ jobs:
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
 
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
-
       - name: Install dependencies
-        run: pnpm install
+        run: bun install
 
       - name: Build executables
         env:
 
           BUN_NO_CODESIGN_MACHO_BINARY: "1"
-        run: pnpm run build:mac
+        run: bun run build:mac
 
       - name: Package binaries
         id: package
@@ -88,3 +82,38 @@ jobs:
           files: |
             dist/24Client Bridge_v*_macos-arm64.zip
             dist/24Client Bridge_v*_macos-x64.zip
+
+  build-linux:
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Install zip
+        run: sudo apt install -y zip
+
+      - name: Build executables
+        run: bun run build:linux
+
+      - name: Package binaries
+        id: package
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          chmod +x dist/24client-bridge-linux-arm64 dist/24client-bridge-linux-x64
+          zip "dist/24Client Bridge_v${version}_linux-x64.zip" dist/24client-bridge-linux-x64
+          zip "dist/24Client Bridge_v${version}_linux-arm64.zip" dist/24client-bridge-linux-arm64
+
+      - name: Upload to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.release.tag_name || github.ref_name }}
+          files: |
+            dist/24Client Bridge_v*_linux-arm64.zip
+            dist/24Client Bridge_v*_linux-x64.zip
