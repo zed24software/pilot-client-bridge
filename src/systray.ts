@@ -3,6 +3,7 @@ import type { MenuItem } from "systray2";
 import os from "os";
 import fs from "fs";
 import { join } from "path";
+import open from "open";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const SysTray: typeof SysTrayType = require("systray2").default;
 import { trayBinWinBase64, trayBinDarwinBase64, trayBinLinux64 } from "./traybin-embedded";
@@ -63,20 +64,30 @@ function loadIcon() {
 }
 
 const IDX_DISCORD = 0;
-const IDX_CHANNEL = 1;
-const IDX_CALLSIGN = 2;
-const IDX_SEP1 = 3;
-const IDX_ACTIVITY = 4;
-const IDX_SEP2 = 5;
-const IDX_EXIT = 6;
+const IDX_VOICE = 1;
+const IDX_CHANNEL = 2;
+const IDX_CALLSIGN = 3;
+const IDX_ACTIVITY = 5;
+const IDX_REAUTH = 6;
+const IDX_DATA_DIR = 7;
+const IDX_UPDATES = 9;
+const IDX_EXIT = 11;
 
-function discordItem(connected: boolean) {
-  return {
-    title: `Discord: ${connected ? "Connected" : "Disconnected"}`,
-    tooltip: "",
-    enabled: false,
-    checked: false,
-  };
+export type DiscordStatus = "disconnected" | "limited" | "authorized";
+export type VoiceStatus = "unconfigured" | "connecting" | "connected";
+
+function discordItem(status: DiscordStatus, username?: string | null) {
+  const label = {
+    disconnected: "Disconnected",
+    limited: "Connected (not signed in)",
+    authorized: username ? `Signed in as ${username}` : "Signed in",
+  }[status];
+  return { title: `Discord: ${label}`, tooltip: "", enabled: false, checked: false };
+}
+
+function voiceItem(status: VoiceStatus) {
+  const label = { unconfigured: "Not configured", connecting: "Connecting...", connected: "Connected" }[status];
+  return { title: `Voice: ${label}`, tooltip: "", enabled: false, checked: false };
 }
 
 function channelItem(name: string | null, frequency?: string | null) {
@@ -106,11 +117,20 @@ function activityItem(enabled: boolean) {
 
 let _tray: InstanceType<typeof SysTray> | null = null;
 
-export function initTray(
-  initialActivity: boolean,
-  onToggleActivity: (next: boolean) => void,
-  onExit: () => void,
-): void {
+export interface TrayHandlers {
+  version: string;
+  dataDir: string;
+  onToggleActivity: (next: boolean) => void;
+  onReauthenticate: () => void;
+  onCheckForUpdates: () => void;
+  onExit: () => void;
+}
+
+function actionItem(title: string, tooltip: string) {
+  return { title, tooltip, enabled: true, checked: false };
+}
+
+export function initTray(initialActivity: boolean, handlers: TrayHandlers): void {
   let activityState = initialActivity;
 
   ensureTrayBin();
@@ -120,13 +140,18 @@ export function initTray(
       title: "",
       tooltip: "Pilot Client Bridge",
       items: [
-        discordItem(false),
+        discordItem("disconnected"),
+        voiceItem("unconfigured"),
         channelItem(null),
         callsignItem(null),
         SysTray.separator,
         activityItem(initialActivity),
+        actionItem("Re-authenticate Discord", "Clear the saved token and sign in again"),
+        actionItem("Open data folder", handlers.dataDir),
         SysTray.separator,
-        { title: "Exit", tooltip: "Exit Pilot Client Bridge", enabled: true, checked: false },
+        actionItem(`Check for updates (v${handlers.version})`, "Check GitHub for a newer release"),
+        SysTray.separator,
+        actionItem("Exit", "Exit Pilot Client Bridge"),
       ],
     },
     debug: false,
@@ -137,19 +162,33 @@ export function initTray(
     switch (action.seq_id) {
       case IDX_ACTIVITY:
         activityState = !activityState;
-        onToggleActivity(activityState);
+        handlers.onToggleActivity(activityState);
         updateActivity(activityState);
+        break;
+      case IDX_REAUTH:
+        handlers.onReauthenticate();
+        break;
+      case IDX_DATA_DIR:
+        fs.mkdirSync(handlers.dataDir, { recursive: true });
+        open(handlers.dataDir).catch(console.warn);
+        break;
+      case IDX_UPDATES:
+        handlers.onCheckForUpdates();
         break;
       case IDX_EXIT:
         _tray!.kill(false);
-        onExit();
+        handlers.onExit();
         break;
     }
   });
 }
 
-export function updateDiscordStatus(connected: boolean): void {
-  _tray?.sendAction({ type: "update-item", seq_id: IDX_DISCORD, item: discordItem(connected) });
+export function updateDiscordStatus(status: DiscordStatus, username?: string | null): void {
+  _tray?.sendAction({ type: "update-item", seq_id: IDX_DISCORD, item: discordItem(status, username) });
+}
+
+export function updateVoiceStatus(status: VoiceStatus): void {
+  _tray?.sendAction({ type: "update-item", seq_id: IDX_VOICE, item: voiceItem(status) });
 }
 
 export function updateChannel(name: string | null, frequency?: string | null): void {

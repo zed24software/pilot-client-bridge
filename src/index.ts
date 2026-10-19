@@ -2,11 +2,12 @@ import express, { type Request, type Response } from "express"
 import cors from "cors"
 import { DiscordRPC } from "./rpc";
 import { RPCCommand } from "./rpc/types/commands";
-import { client_id, activity_enabled } from "./rpc-config.json";
+import { client_id, auth_server, activity_enabled } from "./rpc-config.json";
 import channels from "./channels.json";
-import { initTray, updateDiscordStatus, updateChannel, updateActivity, updateCallsign } from "./systray";
-import { checkForUpdates } from "./updatechecker";
-import { exchangeCodeLocally } from "./token-cache";
+import { initTray, updateDiscordStatus, updateVoiceStatus, updateChannel, updateActivity, updateCallsign } from "./systray";
+import { checkForUpdates, getCurrentVersion } from "./updatechecker";
+import { appDataDir } from "./paths";
+import { exchangeCode, exchangeCodeLocally } from "./token-cache";
 import { REDIRECT_URI } from "./local-auth-server";
 import { readVoiceCreds, writeVoiceCreds, clearVoiceCreds, type VoiceCredentials } from "./voice-creds";
 
@@ -14,7 +15,7 @@ checkForUpdates();
 
 const app = express();
 app.use(cors({
-  origin: ["https://zedruc.net", "http://localhost:5174"],
+  origin: ["https://zedruc.net", "https://24client.zedruc.net", "http://localhost:5174"],
 }));
 app.use(express.json());
 
@@ -23,21 +24,28 @@ const SERVER_VERSION = "1.0.0";
 
 const activityRpc = new DiscordRPC(
   client_id,
-  [],
-  () => Promise.resolve(""),
+  ["rpc", "rpc.voice.read", "identify"],
+  (code) => exchangeCode(auth_server, code),
   "activity",
   true
 );
 
-activityRpc.onAuthenticated = () => {
-  updateDiscordStatus(true);
-  if (!activityEnabled) clearActivity().catch(console.warn);
-  activityRpc.sendRequest(RPCCommand.GET_SELECTED_VOICE_CHANNEL)
+function fetchSelectedVoiceChannel(rpc: DiscordRPC, tag: string) {
+  rpc.sendRequest(RPCCommand.GET_SELECTED_VOICE_CHANNEL)
     .then((res) => {
       cachedSelectedChannel = res.data;
       updateChannel(res.data?.name ?? null);
     })
-    .catch((err: Error) => console.warn("[ActivityRPC] GET_SELECTED_VOICE_CHANNEL failed:", err.message));
+    .catch((err: Error) => console.warn(`[${tag}] GET_SELECTED_VOICE_CHANNEL failed:`, err.message));
+}
+
+activityRpc.onAuthenticated = () => {
+  updateDiscordStatus(
+    activityRpc.hasToken ? "authorized" : "limited",
+    activityRpc.currentUser?.global_name ?? activityRpc.currentUser?.username
+  );
+  if (!activityEnabled) clearActivity().catch(console.warn);
+  if (activityRpc.hasToken) fetchSelectedVoiceChannel(activityRpc, "ActivityRPC");
 };
 
 activityRpc.connect().then(() => {
@@ -45,7 +53,7 @@ activityRpc.connect().then(() => {
   activityRpc.sendHandshake();
 }).catch((err) => {
   console.error("[Bridge] Activity RPC connect failed:", err.message);
-  updateDiscordStatus(false);
+  updateDiscordStatus("disconnected");
 });
 
 let voiceRpc: DiscordRPC | null = null;
@@ -55,6 +63,7 @@ let voiceRpcConnecting = false;
 function initVoiceRpc(creds: VoiceCredentials) {
   if (voiceRpcConnecting) return;
   voiceRpcConnecting = true;
+  updateVoiceStatus("connecting");
 
   voiceRpc = new DiscordRPC(
     creds.client_id,
@@ -65,10 +74,12 @@ function initVoiceRpc(creds: VoiceCredentials) {
 
   voiceRpc.onAuthenticated = () => {
     voiceRpcReady = true;
+    updateVoiceStatus("connected");
     console.log("[Bridge] Voice RPC authenticated");
     voiceRpc!.sendRequest(RPCCommand.GET_CHANNELS, { guild_id: "919656909563371600" })
       .then((res) => { cachedGuildChannels = res.data.channels; })
       .catch((err: Error) => console.warn("[VoiceRPC] GET_CHANNELS failed:", err.message));
+    fetchSelectedVoiceChannel(voiceRpc!, "VoiceRPC");
   };
 
   voiceRpc.connect().then(() => {
@@ -78,6 +89,7 @@ function initVoiceRpc(creds: VoiceCredentials) {
     console.error("[Bridge] Voice RPC connect failed:", err.message);
     voiceRpcConnecting = false;
     voiceRpc = null;
+    updateVoiceStatus("unconfigured");
   });
 }
 
@@ -242,6 +254,7 @@ app.delete("/voice/credentials", (_req: Request, res: Response) => {
   voiceRpc = null;
   voiceRpcReady = false;
   voiceRpcConnecting = false;
+  updateVoiceStatus("unconfigured");
   res.json({ status: 200 });
 });
 
@@ -327,7 +340,7 @@ app.get("/channels", (_req: Request, res: Response) => {
 });
 
 app.get("/rpc/selected-voice-channel", (_req: Request, res: Response) => {
-  if (!rpcActivityReady(res)) return;
+  if (!activityRpc.hasToken && !rpcVoiceReady(res)) return;
   res.json({ status: 200, data: cachedSelectedChannel });
 });
 
@@ -365,7 +378,18 @@ app.listen(BRIDGE_PORT, "127.0.0.1", () => {
   console.log(`Pilot Client Bridge listening on 127.0.0.1:${BRIDGE_PORT}`);
 });
 
-initTray(activityEnabled, (next: boolean) => {
-  activityEnabled = next;
-  if (!activityEnabled) clearActivity().catch(console.warn);
-}, () => process.exit(0));
+initTray(activityEnabled, {
+  version: getCurrentVersion(),
+  dataDir: appDataDir("pilot-client-bridge"),
+  onToggleActivity: (next: boolean) => {
+    activityEnabled = next;
+    if (!activityEnabled) clearActivity().catch(console.warn);
+  },
+  onReauthenticate: () => {
+    activityRpc.reauthenticate().catch((err: Error) => console.warn("[ActivityRPC] re-auth failed:", err.message));
+  },
+  onCheckForUpdates: () => {
+    checkForUpdates().catch(console.warn);
+  },
+  onExit: () => process.exit(0),
+});

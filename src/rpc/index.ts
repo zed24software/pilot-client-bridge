@@ -4,13 +4,14 @@ import Opcodes, { Opcode } from "./types/opcodes";
 import { RPCRequest, RPCResponse } from "./types";
 import { RPCEvent } from "./types/events";
 import { RPCCommand } from "./types/commands";
-import { readCachedToken } from "../token-cache";
+import { readCachedToken, clearCachedToken } from "../token-cache";
 
 export class DiscordRPC {
   private socket?: net.Socket;
   private recvBuf: Buffer = Buffer.alloc(0);
   isReady: boolean = false;
   isAuthenticated: boolean = false;
+  hasToken: boolean = false;
 
   currentUser: any = null;
   voiceConnectionStatus: any = null;
@@ -24,7 +25,7 @@ export class DiscordRPC {
     private readonly scopes: string[],
     private readonly exchangeFn: (code: string) => Promise<string>,
     private readonly tokenKey: string = "default",
-    private readonly authless: boolean = false
+    private readonly allowAuthlessFallback: boolean = false
   ) { }
 
   private getIpcCandidates(index: number): string[] {
@@ -126,46 +127,59 @@ export class DiscordRPC {
     this.isReady = true;
     if (userData) this.currentUser = userData;
 
-    if (this.authless) {
-      console.log(`[RPC:${this.tokenKey}] READY — skipping auth (authless mode)`);
-      this.isAuthenticated = true;
-      this.onAuthenticated?.();
-      return;
-    }
-
     console.log(`[RPC:${this.tokenKey}] READY — starting auth`);
     try {
       await this.authenticate();
-      console.log(`[RPC:${this.tokenKey}] authenticated`);
-      await this.subscribeToEvents();
     } catch (err: any) {
       console.error(`[RPC:${this.tokenKey}] auth failed:`, err.message);
+      if (this.allowAuthlessFallback) {
+        console.log(`[RPC:${this.tokenKey}] falling back to authless mode`);
+        this.isAuthenticated = true;
+        this.onAuthenticated?.();
+      }
+      return;
     }
+
+    console.log(`[RPC:${this.tokenKey}] authenticated`);
+    this.isAuthenticated = true;
+    this.onAuthenticated?.();
+    await this.subscribeToEvents();
+  }
+
+  async reauthenticate() {
+    if (!this.isReady) throw new Error("Discord not connected");
+    clearCachedToken(this.tokenKey);
+    this.hasToken = false;
+    this.isAuthenticated = false;
+    await this.onReady(this.currentUser);
   }
 
   private async authenticate() {
     const cached = readCachedToken(this.tokenKey);
     if (cached) {
       console.log(`[RPC:${this.tokenKey}] using cached token`);
-      const authRes = await this.sendRequest(RPCCommand.AUTHENTICATE, { access_token: cached });
-      if (authRes.data?.user) this.currentUser = authRes.data.user;
-      this.isAuthenticated = true;
-      this.onAuthenticated?.();
-      return;
+      try {
+        await this.authenticateWith(cached);
+        return;
+      } catch (err: any) {
+        console.warn(`[RPC:${this.tokenKey}] cached token rejected: ${err.message}`);
+      }
     }
 
-    console.log(`[RPC:${this.tokenKey}] no cached token — running AUTHORIZE`);
+    console.log(`[RPC:${this.tokenKey}] running AUTHORIZE`);
     const authorizeRes = await this.sendRequest(RPCCommand.AUTHORIZE, {
       client_id: this.clientId,
       scopes: this.scopes,
     });
     const code: string = authorizeRes.data.code;
     const access_token = await this.exchangeFn(code);
+    await this.authenticateWith(access_token);
+  }
 
+  private async authenticateWith(access_token: string) {
     const authRes = await this.sendRequest(RPCCommand.AUTHENTICATE, { access_token });
     if (authRes.data?.user) this.currentUser = authRes.data.user;
-    this.isAuthenticated = true;
-    this.onAuthenticated?.();
+    this.hasToken = true;
   }
 
   private async subscribeToEvents() {

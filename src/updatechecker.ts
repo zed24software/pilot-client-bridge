@@ -57,7 +57,7 @@ function isNewer(local: string, remote: string): boolean {
  * Reads the current app version from package.json in the project root.
  * Falls back to "0.0.0" if not found.
  */
-function getCurrentVersion(): string {
+export function getCurrentVersion(): string {
   try {
     // __dirname works in CommonJS; adjust if using ESM
     // eslint-disable-next-line @typescript-eslint/no-var-requires

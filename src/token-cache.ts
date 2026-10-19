@@ -23,6 +23,10 @@ export function readCachedToken(key = "activity"): string | null {
   }
 }
 
+export function clearCachedToken(key = "activity") {
+  fs.rmSync(tokenFile(key), { force: true });
+}
+
 export function writeCachedToken(access_token: string, expires_in: number, key = "activity") {
   fs.mkdirSync(TOKEN_DIR, { recursive: true });
   const cache: TokenCache = {
