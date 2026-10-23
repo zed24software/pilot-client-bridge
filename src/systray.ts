@@ -6,21 +6,37 @@ import { join } from "path";
 import open from "open";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const SysTray: typeof SysTrayType = require("systray2").default;
-import { trayBinWinBase64, trayBinDarwinBase64, trayBinLinux64 } from "./traybin-embedded";
+import {
+  trayBinWinBase64,
+  trayBinDarwinBase64,
+  trayBinLinux64,
+} from "./traybin-embedded";
 
-const trayBins = new Map<NodeJS.Platform, { binName: string; binBase64: string }>([
-  ["linux", {
-    binName: "tray_linux_release",
-    binBase64: trayBinLinux64
-  }],
-  ["win32", {
-    binName: "tray_windows_release.exe",
-    binBase64: trayBinWinBase64
-  }],
-  ["darwin", {
-    binName: "tray_darwin_release",
-    binBase64: trayBinDarwinBase64
-  }],
+const trayBins = new Map<
+  NodeJS.Platform,
+  { binName: string; binBase64: string }
+>([
+  [
+    "linux",
+    {
+      binName: "tray_linux_release",
+      binBase64: trayBinLinux64,
+    },
+  ],
+  [
+    "win32",
+    {
+      binName: "tray_windows_release.exe",
+      binBase64: trayBinWinBase64,
+    },
+  ],
+  [
+    "darwin",
+    {
+      binName: "tray_darwin_release",
+      binBase64: trayBinDarwinBase64,
+    },
+  ],
 ]);
 
 function isMac() {
@@ -35,17 +51,17 @@ function ensureTrayBin(): void {
   const supportedPlatforms = [...trayBins.keys()];
   const platform = os.platform();
 
-  if(!supportedPlatforms.includes(platform)) {
+  if (!supportedPlatforms.includes(platform)) {
     console.error(`Platform ${platform} is not supported`);
     return;
   }
 
   const trayBinInfo = trayBins.get(platform);
-  if(!trayBinInfo) {
+  if (!trayBinInfo) {
     console.error(`No tray binary for platform "${platform}"`);
     return;
   }
-  const {binName, binBase64} = trayBinInfo;
+  const { binName, binBase64 } = trayBinInfo;
 
   const cacheDir = join(os.homedir(), ".cache", "node-systray", "2.1.4");
   const cachePath = join(cacheDir, binName);
@@ -82,19 +98,36 @@ function discordItem(status: DiscordStatus, username?: string | null) {
     limited: "Connected (not signed in)",
     authorized: username ? `Signed in as ${username}` : "Signed in",
   }[status];
-  return { title: `Discord: ${label}`, tooltip: "", enabled: false, checked: false };
+  return {
+    title: `Discord: ${label}`,
+    tooltip: "",
+    enabled: false,
+    checked: false,
+  };
 }
 
 function voiceItem(status: VoiceStatus) {
-  const label = { unconfigured: "Not configured", connecting: "Connecting...", connected: "Connected" }[status];
-  return { title: `Voice: ${label}`, tooltip: "", enabled: false, checked: false };
+  const label = {
+    unconfigured: "Not configured",
+    connecting: "Connecting...",
+    connected: "Connected",
+  }[status];
+  return {
+    title: `Voice: ${label}`,
+    tooltip: "",
+    enabled: false,
+    checked: false,
+  };
 }
 
 function channelItem(name: string | null, frequency?: string | null) {
-  const label = name
-    ? frequency ? `${name} (${frequency})` : name
-    : "None";
-  return { title: `Channel: ${label}`, tooltip: "", enabled: false, checked: false };
+  const label = name ? (frequency ? `${name} (${frequency})` : name) : "None";
+  return {
+    title: `Channel: ${label}`,
+    tooltip: "",
+    enabled: false,
+    checked: false,
+  };
 }
 
 function callsignItem(callsign: string | null) {
@@ -130,7 +163,10 @@ function actionItem(title: string, tooltip: string) {
   return { title, tooltip, enabled: true, checked: false };
 }
 
-export function initTray(initialActivity: boolean, handlers: TrayHandlers): void {
+export function initTray(
+  initialActivity: boolean,
+  handlers: TrayHandlers,
+): void {
   let activityState = initialActivity;
 
   ensureTrayBin();
@@ -146,10 +182,16 @@ export function initTray(initialActivity: boolean, handlers: TrayHandlers): void
         callsignItem(null),
         SysTray.separator,
         activityItem(initialActivity),
-        actionItem("Re-authenticate Discord", "Clear the saved token and sign in again"),
+        actionItem(
+          "Re-authenticate Discord",
+          "Clear the saved token and sign in again",
+        ),
         actionItem("Open data folder", handlers.dataDir),
         SysTray.separator,
-        actionItem(`Check for updates (v${handlers.version})`, "Check GitHub for a newer release"),
+        actionItem(
+          `Check for updates (v${handlers.version})`,
+          "Check GitHub for a newer release",
+        ),
         SysTray.separator,
         actionItem("Exit", "Exit Pilot Client Bridge"),
       ],
@@ -181,24 +223,64 @@ export function initTray(initialActivity: boolean, handlers: TrayHandlers): void
         break;
     }
   });
+
+  _tray.onError((err) => {
+    console.error("[systray] Failed to spawn the systray process");
+    console.error(err.name, err.message);
+  });
+
+  _tray
+    .ready()
+    .then(() => {
+      console.log("systray started");
+    })
+    .catch((err) => {
+      console.log("systray failed to start: " + err.message);
+    });
 }
 
-export function updateDiscordStatus(status: DiscordStatus, username?: string | null): void {
-  _tray?.sendAction({ type: "update-item", seq_id: IDX_DISCORD, item: discordItem(status, username) });
+export function updateDiscordStatus(
+  status: DiscordStatus,
+  username?: string | null,
+): void {
+  _tray?.sendAction({
+    type: "update-item",
+    seq_id: IDX_DISCORD,
+    item: discordItem(status, username),
+  });
 }
 
 export function updateVoiceStatus(status: VoiceStatus): void {
-  _tray?.sendAction({ type: "update-item", seq_id: IDX_VOICE, item: voiceItem(status) });
+  _tray?.sendAction({
+    type: "update-item",
+    seq_id: IDX_VOICE,
+    item: voiceItem(status),
+  });
 }
 
-export function updateChannel(name: string | null, frequency?: string | null): void {
-  _tray?.sendAction({ type: "update-item", seq_id: IDX_CHANNEL, item: channelItem(name, frequency) });
+export function updateChannel(
+  name: string | null,
+  frequency?: string | null,
+): void {
+  _tray?.sendAction({
+    type: "update-item",
+    seq_id: IDX_CHANNEL,
+    item: channelItem(name, frequency),
+  });
 }
 
 export function updateCallsign(callsign: string | null): void {
-  _tray?.sendAction({ type: "update-item", seq_id: IDX_CALLSIGN, item: callsignItem(callsign) });
+  _tray?.sendAction({
+    type: "update-item",
+    seq_id: IDX_CALLSIGN,
+    item: callsignItem(callsign),
+  });
 }
 
 export function updateActivity(enabled: boolean): void {
-  _tray?.sendAction({ type: "update-item", seq_id: IDX_ACTIVITY, item: activityItem(enabled) });
+  _tray?.sendAction({
+    type: "update-item",
+    seq_id: IDX_ACTIVITY,
+    item: activityItem(enabled),
+  });
 }
