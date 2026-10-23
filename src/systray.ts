@@ -224,11 +224,6 @@ export function initTray(
     }
   });
 
-  _tray.onError((err) => {
-    console.error("[systray] Failed to spawn the systray process");
-    console.error(err.name, err.message);
-  });
-
   _tray
     .ready()
     .then(() => {
