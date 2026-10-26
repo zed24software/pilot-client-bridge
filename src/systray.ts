@@ -56,6 +56,7 @@ function ensureTrayBin(): void {
     return;
   }
 
+  //! todo: remove debug hardcode
   const trayBinInfo = trayBins.get(platform);
   if (!trayBinInfo) {
     console.error(`No tray binary for platform "${platform}"`);
@@ -163,44 +164,72 @@ function actionItem(title: string, tooltip: string) {
   return { title, tooltip, enabled: true, checked: false };
 }
 
+let activityState = false;
+
 export function initTray(
   initialActivity: boolean,
   handlers: TrayHandlers,
 ): void {
-  let activityState = initialActivity;
+  activityState = initialActivity;
 
-  ensureTrayBin();
-  _tray = new SysTray({
-    menu: {
-      icon: loadIcon(),
-      title: "",
-      tooltip: "Pilot Client Bridge",
-      items: [
-        discordItem("disconnected"),
-        voiceItem("unconfigured"),
-        channelItem(null),
-        callsignItem(null),
-        SysTray.separator,
-        activityItem(initialActivity),
-        actionItem(
-          "Re-authenticate Discord",
-          "Clear the saved token and sign in again",
-        ),
-        actionItem("Open data folder", handlers.dataDir),
-        SysTray.separator,
-        actionItem(
-          `Check for updates (v${handlers.version})`,
-          "Check GitHub for a newer release",
-        ),
-        SysTray.separator,
-        actionItem("Exit", "Exit Pilot Client Bridge"),
-      ],
-    },
-    debug: false,
-    copyDir: true,
-  });
+  const tray = spawnTray(handlers);
+  if (!tray) return;
+  _tray = tray;
 
-  _tray.onClick((action: { seq_id: number }) => {
+  tray
+    .ready()
+    .then(() => tray.onClick(createClickHandler(handlers)))
+    .then(() => {
+      console.log("[SysTray2] systray started");
+    })
+    .catch((err: Error) => {
+      _tray = null;
+      console.log("[SysTray2] systray failed to start: " + err.message);
+    });
+}
+
+function spawnTray(
+  handlers: TrayHandlers,
+): InstanceType<typeof SysTray> | null {
+  try {
+    ensureTrayBin();
+    return new SysTray({
+      menu: {
+        icon: loadIcon(),
+        title: "",
+        tooltip: "Pilot Client Bridge",
+        items: [
+          discordItem("disconnected"),
+          voiceItem("unconfigured"),
+          channelItem(null),
+          callsignItem(null),
+          SysTray.separator,
+          activityItem(activityState),
+          actionItem(
+            "Re-authenticate Discord",
+            "Clear the saved token and sign in again",
+          ),
+          actionItem("Open data folder", handlers.dataDir),
+          SysTray.separator,
+          actionItem(
+            `Check for updates (v${handlers.version})`,
+            "Check GitHub for a newer release",
+          ),
+          SysTray.separator,
+          actionItem("Exit", "Exit Pilot Client Bridge"),
+        ],
+      },
+      debug: false,
+      copyDir: true,
+    });
+  } catch (err) {
+    console.log("systray failed to start: " + (err as Error).message);
+    return null;
+  }
+}
+
+function createClickHandler(handlers: TrayHandlers) {
+  return (action: { seq_id: number }) => {
     switch (action.seq_id) {
       case IDX_ACTIVITY:
         activityState = !activityState;
@@ -218,27 +247,22 @@ export function initTray(
         handlers.onCheckForUpdates();
         break;
       case IDX_EXIT:
-        _tray!.kill(false);
+        _tray?.kill(false);
         handlers.onExit();
         break;
     }
-  });
+  };
+}
 
-  _tray
-    .ready()
-    .then(() => {
-      console.log("systray started");
-    })
-    .catch((err) => {
-      console.log("systray failed to start: " + err.message);
-    });
+function sendTrayAction(action: Parameters<InstanceType<typeof SysTray>["sendAction"]>[0]): void {
+  _tray?.sendAction(action).catch(() => {});
 }
 
 export function updateDiscordStatus(
   status: DiscordStatus,
   username?: string | null,
 ): void {
-  _tray?.sendAction({
+  sendTrayAction({
     type: "update-item",
     seq_id: IDX_DISCORD,
     item: discordItem(status, username),
@@ -246,7 +270,7 @@ export function updateDiscordStatus(
 }
 
 export function updateVoiceStatus(status: VoiceStatus): void {
-  _tray?.sendAction({
+  sendTrayAction({
     type: "update-item",
     seq_id: IDX_VOICE,
     item: voiceItem(status),
@@ -257,7 +281,7 @@ export function updateChannel(
   name: string | null,
   frequency?: string | null,
 ): void {
-  _tray?.sendAction({
+  sendTrayAction({
     type: "update-item",
     seq_id: IDX_CHANNEL,
     item: channelItem(name, frequency),
@@ -265,7 +289,7 @@ export function updateChannel(
 }
 
 export function updateCallsign(callsign: string | null): void {
-  _tray?.sendAction({
+  sendTrayAction({
     type: "update-item",
     seq_id: IDX_CALLSIGN,
     item: callsignItem(callsign),
@@ -273,7 +297,7 @@ export function updateCallsign(callsign: string | null): void {
 }
 
 export function updateActivity(enabled: boolean): void {
-  _tray?.sendAction({
+  sendTrayAction({
     type: "update-item",
     seq_id: IDX_ACTIVITY,
     item: activityItem(enabled),
