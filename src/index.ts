@@ -15,7 +15,7 @@ checkForUpdates();
 
 const app = express();
 app.use(cors({
-  origin: ["https://zedruc.net", "https://24client.zedruc.net", "http://localhost:5174"],
+  origin: ["https://zedruc.net", "https://24client.zedruc.net", "https://24scope.zedruc.net", "http://localhost:5173", "http://localhost:5174"],
 }));
 app.use(express.json());
 
@@ -127,7 +127,16 @@ interface FlightState {
   destination?: string;
 }
 
+interface ControllerState {
+  station: string;
+  kind: "ground" | "area";
+  aircraftCount: number;
+  startedAt: number;
+}
+
 let flightState: FlightState = {};
+let controllerState: ControllerState | null = null;
+let stateCleared = false;
 let activityEnabled = activity_enabled;
 let lastStateUpdate = 0;
 let flightStartedAt = Date.now();
@@ -147,6 +156,16 @@ const PHASE_LABELS: Record<FlightPhase, string> = {
 function buildActivity() {
   if (lastStateUpdate > 0 && Date.now() - lastStateUpdate > IDLE_TIMEOUT_MS) {
     return { details: "Idling", timestamps: { start: flightStartedAt } };
+  }
+
+  if (controllerState) {
+    const count = controllerState.aircraftCount;
+    const where = controllerState.kind === "ground" ? "on the ground" : "in airspace";
+    return {
+      details: `Controlling ${controllerState.station}`,
+      state: `${count} aircraft ${where}`,
+      timestamps: { start: controllerState.startedAt },
+    };
   }
 
   const parts: string[] = [];
@@ -180,7 +199,7 @@ async function clearActivity() {
 }
 
 setInterval(async () => {
-  if (!activityRpc.isAuthenticated || !activityEnabled) return;
+  if (!activityRpc.isAuthenticated || !activityEnabled || stateCleared) return;
   try {
     const activity = buildActivity();
     console.log("[Activity] SET_ACTIVITY", JSON.stringify(activity));
@@ -351,9 +370,38 @@ app.post("/activity/toggle", (req: Request, res: Response) => {
   res.json({ status: 200, activityEnabled });
 });
 
+app.delete("/state", (_req: Request, res: Response) => {
+  flightState = {};
+  controllerState = null;
+  stateCleared = true;
+  updateCallsign(null);
+  if (activityEnabled) clearActivity().catch(console.warn);
+  res.json({ status: 200 });
+});
+
 app.post("/state", (req: Request, res: Response) => {
-  const { altitude, heading, groundspeed, phase, callsign, aircraft, departure, destination } =
-    req.body as FlightState;
+  const { altitude, heading, groundspeed, phase, callsign, aircraft, departure, destination, controller } =
+    req.body as FlightState & { controller?: ControllerState };
+
+  stateCleared = false;
+
+  if (controller) {
+    if (!controllerState || controllerState.station !== controller.station) {
+      flightState = {};
+    }
+    controllerState = {
+      station: String(controller.station),
+      kind: controller.kind === "ground" ? "ground" : "area",
+      aircraftCount: Math.max(0, Math.floor(Number(controller.aircraftCount) || 0)),
+      startedAt: Number(controller.startedAt) || Date.now(),
+    };
+    lastStateUpdate = Date.now();
+    updateCallsign(controllerState.station);
+    res.json({ status: 200 });
+    return;
+  }
+
+  controllerState = null;
 
   if (callsign !== undefined && callsign !== flightState.callsign) {
     flightState = {};
