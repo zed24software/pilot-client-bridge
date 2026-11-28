@@ -423,7 +423,7 @@ app.post("/state", (req: Request, res: Response) => {
 });
 
 app.listen(BRIDGE_PORT, "127.0.0.1", () => {
-  console.log(`Pilot Client Bridge listening on 127.0.0.1:${BRIDGE_PORT}`);
+  console.log(`24Scope Bridge listening on 127.0.0.1:${BRIDGE_PORT}`);
 });
 
 initTray(activityEnabled, {

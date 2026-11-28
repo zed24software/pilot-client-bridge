@@ -7,7 +7,7 @@ import open from "open";
 // ─── Configuration ────────────────────────────────────────────────────────────
 
 const GITHUB_OWNER = "zed24software";
-const GITHUB_REPO = "pilot-client-bridge";
+const GITHUB_REPO = "24scope-bridge";
 const RELEASES_URL = `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/releases/latest`;
 const GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases/latest`;
 
@@ -90,13 +90,13 @@ async function fetchLatestRelease(): Promise<GitHubRelease> {
 function sendDesktopNotification(title: string, message: string): void {
   notifier.notify({
     title: "Update Available",
-    message: "24Client Bridge has a newer version available in the repo!",
+    message: "24Scope Bridge has a newer version available in the repo!",
     wait: true,
     icon: "./assets/icon.png"
   });
 
   notifier.on("click", (notifierObject, options, event) => {
-    open("https://github.com/zed24software/pilot-client-bridge");
+    open("https://github.com/zed24software/24scope-bridge");
   });
 
   // try {
@@ -166,7 +166,7 @@ export async function checkForUpdates(
     );
 
     sendDesktopNotification(
-      "Update Available – Pilot Client Bridge",
+      "Update Available – 24Scope Bridge",
       `Version ${latestVersion} is available (you have ${localVersion}). Visit the releases page to download.`
     );
   } else {

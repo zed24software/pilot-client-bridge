@@ -197,7 +197,7 @@ function spawnTray(
       menu: {
         icon: loadIcon(),
         title: "",
-        tooltip: "Pilot Client Bridge",
+        tooltip: "24Scope Bridge",
         items: [
           discordItem("disconnected"),
           voiceItem("unconfigured"),
@@ -216,7 +216,7 @@ function spawnTray(
             "Check GitHub for a newer release",
           ),
           SysTray.separator,
-          actionItem("Exit", "Exit Pilot Client Bridge"),
+          actionItem("Exit", "Exit 24Scope Bridge"),
         ],
       },
       debug: false,
