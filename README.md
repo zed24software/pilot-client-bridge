@@ -1,6 +1,6 @@
-# 24Client Bridge
+# 24Scope Bridge
 
-24Client Bridge is a small background app that connects 24Client to Discord. It shows your current flight as a Discord status and lets you automatically switch voice channels when you change frequencies.
+24Scope Bridge is a small background app that connects 24Scope to Discord. It shows your current flight as a Discord status and lets you automatically switch voice channels when you change frequencies.
 
 ---
 
@@ -16,8 +16,8 @@ That's it. The app runs in the background. You should look for its icon in your 
 
 ### macOS
 #### IMPORTANT: Safari isn't supported. Please use a modern browser like Firefox or Chrome.
-1. Download the latest `24Client Bridge_v*_macos-arm64.zip` (Apple Silicon) or `..._macos-x64.zip` (Intel) from the [Releases](../../releases) tab
-2. Unzip it and move `24client-bridge-mac-arm64` (or `-x64`) somewhere convenient, e.g. `/Applications`
+1. Download the latest `24Scope Bridge_v*_macos-arm64.zip` (Apple Silicon) or `..._macos-x64.zip` (Intel) from the [Releases](../../releases) tab
+2. Unzip it and move `24scope-bridge-mac-arm64` (or `-x64`) somewhere convenient, e.g. `/Applications`
 3. **IMPORTANT: As the binary isn't code signed (it costs $99 a year), the first launch requires you to follow [this](https://support.apple.com/en-us/guide/mac-help/mh40616/mac) guide from Apple to bypass macOS Gatekeeper's warning.**
 4. Look for its icon in the menu bar
 
@@ -25,8 +25,8 @@ There is no installer for macOS as the app is a single executable you run direct
 
 ### Linux
 #### IMPORTANT: Flatpak Discord isn't supported due to the sandboxed environment in which flatpak apps run
-1. Download the latest `24Client Bridge_v*_linux-x64.zip` (Intel/AMD) or `-arm64.zip` (ARM Processors) from the [Releases](../../releases) tab
-2. Unzip it and move the executable `24client-bridge-linux-x64` (or `-arm64`) somewhere convenient, e.g. `/Applications`
+1. Download the latest `24Scope Bridge_v*_linux-x64.zip` (Intel/AMD) or `-arm64.zip` (ARM Processors) from the [Releases](../../releases) tab
+2. Unzip it and move the executable `24scope-bridge-linux-x64` (or `-arm64`) somewhere convenient, e.g. `/Applications`
 3. Make sure the binary is executable (`chmod +x <file>`)
 4. Look for its icon in the menu bar after launching
 
@@ -51,9 +51,9 @@ To enable automatic voice channel switching, you need to create a free Discord a
 5. Click **Save Changes**
 6. Copy your **Client ID** and **Client Secret** from the same page
 
-**Step 2 — Enter your credentials in 24Client**
+**Step 2 — Enter your credentials in 24Scope**
 
-Open 24Client and enter the Client ID and Client Secret in the bridge settings. The app saves these automatically — you only need to do this once.
+Open 24Scope and enter the Client ID and Client Secret in the bridge settings. The app saves these automatically — you only need to do this once.
 
 **Step 3 — Authorize**
 
@@ -73,7 +73,7 @@ If you accept, Windows will recognize Zed's Software as a verified publisher, so
 
 **The app isn't showing my flight status on Discord**
 - Make sure Discord is open and running
-- Make sure 24Client Bridge is running (check your system tray)
+- Make sure 24Scope Bridge is running (check your system tray)
 
 **Voice channel switching isn't working**
 - Double-check that you completed the Discord app setup above
@@ -97,4 +97,4 @@ GNU General Public License v3.0 — see [LICENSE](LICENSE)
 
 ## Credits
 
-Created by Zedruc and awdev for 24Client flight simulation integration.
+Created by Zedruc and awdev for 24Scope flight simulation integration.
