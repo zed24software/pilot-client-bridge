@@ -133,6 +133,10 @@ export class DiscordRPC {
     } catch (err: any) {
       if (String(err.message).includes("invalid_scope")) {
         console.warn(`[RPC:${this.tokenKey}] Discord refused private RPC scopes for this app. Rich presence still works without auth.`);
+        console.error(`[RPC:${this.tokenKey}] auth failed:`, err.message);
+        console.warn("\n=========\n");
+        console.warn("The error above is caused by not properly setting up your own Discord application, please follow the instructions in voice setup window which you can open by clicking the \"VCE STP\" button in 24Scope Pilot Mode.");
+        console.warn("\n=========\n");
       } else {
         console.error(`[RPC:${this.tokenKey}] auth failed:`, err.message);
         console.warn("\n=========\n");
