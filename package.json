@@ -1,16 +1,16 @@
 {
-  "name": "pilot-client-bridge",
+  "name": "24scope-bridge",
   "version": "1.0.10",
   "description": "",
   "main": "src/index.ts",
   "scripts": {
     "dev": "nodemon --watch ./src ./src/index.ts",
-    "build": "node scripts/embed-tray-bin.mjs && bun build ./src/index.ts --compile --minify --sourcemap --target=bun-windows-x64-baseline --outfile ./dist/24client-bridge --windows-icon=src/assets/icon.ico --windows-title=\"24client-bridge\" --windows-description=\"Bridge application connecting 24client to Discord\" --windows-copyright=\"Zedruc and awdev_\"",
-    "build:mac-arm64": "node scripts/embed-tray-bin.mjs && bun build ./src/index.ts --compile --minify --sourcemap --target=bun-darwin-arm64 --outfile ./dist/24client-bridge-mac-arm64",
-    "build:mac-x64": "node scripts/embed-tray-bin.mjs && bun build ./src/index.ts --compile --minify --sourcemap --target=bun-darwin-x64 --outfile ./dist/24client-bridge-mac-x64",
+    "build": "node scripts/embed-tray-bin.mjs && bun build ./src/index.ts --compile --minify --sourcemap --target=bun-windows-x64-baseline --outfile ./dist/24scope-bridge --windows-icon=src/assets/icon.ico --windows-title=\"24scope-bridge\" --windows-description=\"Bridge application connecting 24scope to Discord\" --windows-copyright=\"Zedruc and awdev_\"",
+    "build:mac-arm64": "node scripts/embed-tray-bin.mjs && bun build ./src/index.ts --compile --minify --sourcemap --target=bun-darwin-arm64 --outfile ./dist/24scope-bridge-mac-arm64",
+    "build:mac-x64": "node scripts/embed-tray-bin.mjs && bun build ./src/index.ts --compile --minify --sourcemap --target=bun-darwin-x64 --outfile ./dist/24scope-bridge-mac-x64",
     "build:mac": "bun run build:mac-arm64 && bun run build:mac-x64",
-    "build:linux-x64": "node scripts/embed-tray-bin.mjs && bun build ./src/index.ts --compile --minify --sourcemap --target=bun-linux-x64 --outfile ./dist/24client-bridge-linux-x64",
-    "build:linux-arm64": "node scripts/embed-tray-bin.mjs && bun build ./src/index.ts --compile --minify --sourcemap --target=bun-linux-arm64 --outfile ./dist/24client-bridge-linux-arm64",
+    "build:linux-x64": "node scripts/embed-tray-bin.mjs && bun build ./src/index.ts --compile --minify --sourcemap --target=bun-linux-x64 --outfile ./dist/24scope-bridge-linux-x64",
+    "build:linux-arm64": "node scripts/embed-tray-bin.mjs && bun build ./src/index.ts --compile --minify --sourcemap --target=bun-linux-arm64 --outfile ./dist/24scope-bridge-linux-arm64",
     "build:linux": "bun run build:linux-x64 && bun run build:linux-arm64",
     "build-installer": "bun run build && node scripts/build-installer.mjs",
     "serve": "bun run build && bun build-installer"

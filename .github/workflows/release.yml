@@ -37,7 +37,7 @@ jobs:
       - name: Resolve installer path
         id: installer
         run: |
-          $file = Get-Item "dist\24Client Bridge_Setup_v*.exe" | Select-Object -First 1 -ExpandProperty FullName
+          $file = Get-Item "dist\24Scope Bridge_Setup_v*.exe" | Select-Object -First 1 -ExpandProperty FullName
           echo "path=$file" >> $env:GITHUB_OUTPUT
 
       - name: Upload to GitHub Releases
@@ -69,19 +69,19 @@ jobs:
         id: package
         run: |
           version="${GITHUB_REF_NAME#v}"
-          chmod +x dist/24client-bridge-mac-arm64 dist/24client-bridge-mac-x64
-          codesign --force -s - dist/24client-bridge-mac-arm64
-          codesign --force -s - dist/24client-bridge-mac-x64
-          ditto -c -k --sequesterRsrc dist/24client-bridge-mac-arm64 "dist/24Client Bridge_v${version}_macos-arm64.zip"
-          ditto -c -k --sequesterRsrc dist/24client-bridge-mac-x64 "dist/24Client Bridge_v${version}_macos-x64.zip"
+          chmod +x dist/24scope-bridge-mac-arm64 dist/24scope-bridge-mac-x64
+          codesign --force -s - dist/24scope-bridge-mac-arm64
+          codesign --force -s - dist/24scope-bridge-mac-x64
+          ditto -c -k --sequesterRsrc dist/24scope-bridge-mac-arm64 "dist/24Scope Bridge_v${version}_macos-arm64.zip"
+          ditto -c -k --sequesterRsrc dist/24scope-bridge-mac-x64 "dist/24Scope Bridge_v${version}_macos-x64.zip"
 
       - name: Upload to GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.release.tag_name || github.ref_name }}
           files: |
-            dist/24Client Bridge_v*_macos-arm64.zip
-            dist/24Client Bridge_v*_macos-x64.zip
+            dist/24Scope Bridge_v*_macos-arm64.zip
+            dist/24Scope Bridge_v*_macos-x64.zip
 
   build-linux:
     runs-on: blacksmith-2vcpu-ubuntu-2404
@@ -106,14 +106,14 @@ jobs:
         id: package
         run: |
           version="${GITHUB_REF_NAME#v}"
-          chmod +x dist/24client-bridge-linux-arm64 dist/24client-bridge-linux-x64
-          zip "dist/24Client Bridge_v${version}_linux-x64.zip" dist/24client-bridge-linux-x64
-          zip "dist/24Client Bridge_v${version}_linux-arm64.zip" dist/24client-bridge-linux-arm64
+          chmod +x dist/24scope-bridge-linux-arm64 dist/24scope-bridge-linux-x64
+          zip "dist/24Scope Bridge_v${version}_linux-x64.zip" dist/24scope-bridge-linux-x64
+          zip "dist/24Scope Bridge_v${version}_linux-arm64.zip" dist/24scope-bridge-linux-arm64
 
       - name: Upload to GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.release.tag_name || github.ref_name }}
           files: |
-            dist/24Client Bridge_v*_linux-arm64.zip
-            dist/24Client Bridge_v*_linux-x64.zip
+            dist/24Scope Bridge_v*_linux-arm64.zip
+            dist/24Scope Bridge_v*_linux-x64.zip

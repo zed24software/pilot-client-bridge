@@ -3,7 +3,7 @@ import { readFileSync } from "fs";
 
 const { version } = JSON.parse(readFileSync("package.json", "utf8"));
 const viVersion = `${version}.0`;
-const outFile = `dist\\24Client Bridge_Setup_v${version}.exe`;
+const outFile = `dist\\24Scope Bridge_Setup_v${version}.exe`;
 
 const regQuery = (key, name) => {
   try {
@@ -23,7 +23,7 @@ execSync(
 
 console.log("Signing installer...");
 execSync(
-  `signtool sign /sha1 7B5A9861DE22E43A7343D8AC0C8D201215190FC4 /fd SHA256 /d "24Client Bridge" "${outFile}"`,
+  `signtool sign /sha1 7B5A9861DE22E43A7343D8AC0C8D201215190FC4 /fd SHA256 /d "24Scope Bridge" "${outFile}"`,
   { stdio: "inherit", env: freshEnv }
 );
 
