@@ -131,9 +131,17 @@ export class DiscordRPC {
     try {
       await this.authenticate();
     } catch (err: any) {
-      console.error(`[RPC:${this.tokenKey}] auth failed:`, err.message);
+      if (String(err.message).includes("invalid_scope")) {
+        console.warn(`[RPC:${this.tokenKey}] Discord refused private RPC scopes for this app. Rich presence still works without auth.`);
+      } else {
+        console.error(`[RPC:${this.tokenKey}] auth failed:`, err.message);
+        console.warn("\n=========\n");
+        console.warn("The error above is caused by not properly setting up your own Discord application, please follow the instructions in voice setup window which you can open by clicking the \"VCE STP\" button in 24Scope Pilot Mode.");
+        console.warn("\n=========\n");
+      }
       if (this.allowAuthlessFallback) {
         console.log(`[RPC:${this.tokenKey}] falling back to authless mode`);
+        console.warn("[!] Voice channel switching will NOT work until you go through the voice setup");
         this.isAuthenticated = true;
         this.onAuthenticated?.();
       }
