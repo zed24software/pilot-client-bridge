@@ -428,7 +428,7 @@ app.listen(BRIDGE_PORT, "127.0.0.1", () => {
 
 initTray(activityEnabled, {
   version: getCurrentVersion(),
-  dataDir: appDataDir("pilot-client-bridge"),
+  dataDir: appDataDir("24scope-bridge"),
   onToggleActivity: (next: boolean) => {
     activityEnabled = next;
     if (!activityEnabled) clearActivity().catch(console.warn);

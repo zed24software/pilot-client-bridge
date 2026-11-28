@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { appDataDir } from "./paths";
 
-const CREDS_DIR = appDataDir("pilot-client-bridge");
+const CREDS_DIR = appDataDir("24scope-bridge");
 const CREDS_FILE = path.join(CREDS_DIR, "voice-creds.json");
 
 export interface VoiceCredentials {
