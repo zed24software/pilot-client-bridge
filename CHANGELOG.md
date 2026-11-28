@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the 24Client Bridge project will be documented in this file.
+All notable changes to the 24Scope Bridge project will be documented in this file.
 
 ## [1.0.6] - 2026-07-20
 
