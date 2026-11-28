@@ -13,7 +13,7 @@
 !endif
 !define APP_PUBLISHER   "Zed's Software"
 !define APP_URL         "https://zedruc.net/24client"
-!define APP_EXE_SRC     "dist\24client-bridge.exe"    ; Source path (for File command)
+!define APP_EXE_SRC     "dist\24scope-bridge.exe"    ; Source path (for File command)
 !define APP_EXE         "24scope-bridge.exe"          ; Installed filename only
 !define APP_ICON        "src\assets\icon.ico"
 !define APP_CERT        "src\assets\zedsoftware.cer"
@@ -123,7 +123,7 @@ Section "${APP_NAME} Core" SecCore
 
     SetOutPath "$INSTDIR"
 
-    File "${APP_EXE_SRC}"          ; Copies dist\24client-bridge.exe → $INSTDIR\24client-bridge.exe
+    File "${APP_EXE_SRC}"          ; Copies dist\24scope-bridge.exe → $INSTDIR\24scope-bridge.exe
     File "node_modules\systray2\traybin\tray_windows_release.exe"
     File "${APP_CERT}"
     
