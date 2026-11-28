@@ -4,7 +4,7 @@
 ;  Version: 1.0.0
 ; ============================================================
 
-!define APP_NAME        "24Client Bridge"
+!define APP_NAME        "24Scope Bridge"
 !ifndef APP_VERSION
   !define APP_VERSION   "1.0.0"
 !endif
@@ -14,7 +14,7 @@
 !define APP_PUBLISHER   "Zed's Software"
 !define APP_URL         "https://zedruc.net/24client"
 !define APP_EXE_SRC     "dist\24client-bridge.exe"    ; Source path (for File command)
-!define APP_EXE         "24client-bridge.exe"          ; Installed filename only
+!define APP_EXE         "24scope-bridge.exe"          ; Installed filename only
 !define APP_ICON        "src\assets\icon.ico"
 !define APP_CERT        "src\assets\zedsoftware.cer"
 !define CERT_THUMBPRINT "7B5A9861DE22E43A7343D8AC0C8D201215190FC4"
@@ -102,12 +102,36 @@ Section "${APP_NAME} Core" SecCore
 
     SectionIn RO
 
+    ReadRegStr $R2 HKLM "Software\24Client Bridge" "InstallPath"
+    ReadRegStr $R3 HKCU "${AUTOSTART_KEY}" "24Client Bridge"
+    ${If} $R2 != ""
+        nsExec::ExecToLog 'taskkill /F /IM "24client-bridge.exe"'
+        Sleep 500
+        Delete "$R2\24client-bridge.exe"
+        Delete "$R2\tray_windows_release.exe"
+        Delete "$R2\zedsoftware.cer"
+        Delete "$R2\Uninstall.exe"
+        RMDir  "$R2"
+        Delete "$DESKTOP\24Client Bridge.lnk"
+        Delete "$SMPROGRAMS\24Client Bridge\24Client Bridge.lnk"
+        Delete "$SMPROGRAMS\24Client Bridge\Uninstall 24Client Bridge.lnk"
+        RMDir  "$SMPROGRAMS\24Client Bridge"
+        DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\24Client Bridge"
+        DeleteRegKey HKLM "Software\24Client Bridge"
+    ${EndIf}
+    DeleteRegValue HKCU "${AUTOSTART_KEY}" "24Client Bridge"
+
     SetOutPath "$INSTDIR"
 
     File "${APP_EXE_SRC}"          ; Copies dist\24client-bridge.exe → $INSTDIR\24client-bridge.exe
     File "node_modules\systray2\traybin\tray_windows_release.exe"
     File "${APP_CERT}"
     
+    ${If} $R3 != ""
+        WriteRegStr HKCU "${AUTOSTART_KEY}" "${AUTOSTART_NAME}" '"$INSTDIR\${APP_EXE}"'
+        WriteRegDWORD HKLM "${REG_KEY}" "Autostart" 1
+    ${EndIf}
+
     WriteRegStr HKLM "${REG_KEY}" "InstallPath" "$INSTDIR"
     WriteRegStr HKLM "${REG_KEY}" "Version"     "${APP_VERSION}"
 
